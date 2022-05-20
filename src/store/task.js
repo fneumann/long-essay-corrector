@@ -3,7 +3,7 @@ import localForage from "localforage";
 import {useApiStore} from "./api";
 
 const storage = localForage.createInstance({
-    storeName: "task",
+    storeName: "corrector-task",
     description: "Task data",
 });
 
@@ -18,9 +18,8 @@ export const useTaskStore = defineStore('task',{
         return {
             // saved in storage
             title: null,            // title of the task - shown in the app bar
-            writer_name: null,      // name of the writer - shown in the app bar
             instructions: null,     // instructions - shown in the left column
-            writing_end: null,      // writung end (sec in server time) - accept no writing step after this time
+            correction_end: null,   // correction end (sec in server time) - accept no writing step after this time
 
             // not saved in storage
             remaining_time: null     // remaining writing time in seconds (updated per interval)
@@ -28,16 +27,15 @@ export const useTaskStore = defineStore('task',{
     },
 
     getters: {
-        hasWritingEnd: (state) => !!state.writing_end,
-        writingEndReached: (state) => state.remaining_time === 0,
+        hasCorrectionEnd: (state) => !!state.correction_end,
+        correctionEndReached: (state) => state.remaining_time === 0,
     },
 
     actions: {
         setData(data) {
             this.title = data.title;
             this.instructions = data.instructions;
-            this.writer_name = data.writer_name;
-            this.writing_end = data.writing_end;
+            this.correction_end = data.correction_end;
         },
 
         async clearStorage() {
@@ -80,13 +78,13 @@ export const useTaskStore = defineStore('task',{
             const apiStore = useApiStore();
 
             if (this.writing_end) {
-                this.remaining_time = Math.max(0, this.writing_end - apiStore.serverTime(Date.now()));
+                this.remaining_time = Math.max(0, this.correction_end - apiStore.serverTime(Date.now()));
             }
             else {
                 this.remaining_time = null;
             }
 
-            if (this.writingEndReached) {
+            if (this.correctionEndReached) {
                 apiStore.review = true;
             }
         }

@@ -42,8 +42,12 @@ function getResourceIcon(resource) {
                    title="Aufgabenstellung">
       </v-list-item>
       <v-list-item @click="layoutStore.showEssay(); closeNavigation();"
-                   :prepend-icon="layoutStore.isEssayVisible ? 'mdi-file-edit': 'mdi-file-edit-outline'"
-                   title="Essay schreiben">
+                   :prepend-icon="layoutStore.isEssayVisible ? 'mdi-file': 'mdi-file-outline'"
+                   title="Abgegebener Text">
+      </v-list-item>
+      <v-list-item @click="layoutStore.showSummary(); closeNavigation();"
+                   :prepend-icon="layoutStore.isSummaryVisible ? 'mdi-file-edit': 'mdi-file-edit-outline'"
+                   title="Meine Korrektur">
       </v-list-item>
 
       <v-list-group v-show="resourcesStore.hasResources">
@@ -64,8 +68,6 @@ function getResourceIcon(resource) {
 
       </v-list-group>
 
-
-      <!-- <v-list-item prepend-icon="mdi-clipboard-outline" title="Notizbrett"></v-list-item>-->
     </v-list>
 
   </v-navigation-drawer>

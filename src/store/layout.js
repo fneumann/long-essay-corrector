@@ -1,7 +1,7 @@
 import { defineStore } from 'pinia';
 import localForage from "localforage";
 const storage = localForage.createInstance({
-    storeName: "layout",
+    storeName: "corrector-layout",
     description: "Layout data",
 });
 
@@ -15,9 +15,8 @@ export const useLayoutStore = defineStore('layout',{
         return {
             // saved in storage
             expandedColumn: 'left',         // left|right|none
-            leftContent: 'instructions',    // instructions|resources
-            rightContent: 'essay',          // essay
-            showTimer: true
+            leftContent: 'instructions',    // instructions|resources|essay|correctors
+            rightContent: 'summary',        // summary
         }
     },
 
@@ -30,11 +29,15 @@ export const useLayoutStore = defineStore('layout',{
 
         isInstructionsSelected: (state) => state.leftContent == 'instructions',
         isResourcesSelected: (state) => state.leftContent == 'resources',
+        isCorrectorsSelected: (state) => state.leftContent == 'correctors',
+        isEssaySelected: (state) => state.leftContent == 'essay',
 
         isInstructionsVisible: (state) => (state.expandedColumn != 'right' && state.leftContent == 'instructions'),
         isResourcesVisible: (state) => (state.expandedColumn != 'right' && state.leftContent == 'resources'),
+        isCorrectorsVisible: (state) => (state.expandedColumn != 'right' && state.leftContent == 'correctors'),
+        isEssayVisible: (state) => (state.expandedColumn != 'right' && state.leftContent == 'essay'),
 
-        isEssayVisible: (state) => (state.expandedColumn != 'left' && state.rightContent == 'essay')
+        isSummaryVisible: (state) => (state.expandedColumn != 'left' && state.rightContent == 'summary')
     },
 
     actions: {
@@ -47,7 +50,6 @@ export const useLayoutStore = defineStore('layout',{
                 console.log(err);
             }
         },
-
 
         async loadFromStorage() {
             try {
@@ -92,9 +94,21 @@ export const useLayoutStore = defineStore('layout',{
             this.saveToStorage();
         },
 
+        showCorrectors() {
+            this.setLeftVisible();
+            this.leftContent = 'correctors';
+            this.saveToStorage();
+        },
+
         showEssay() {
+            this.setLeftVisible();
+            this.leftContent = 'essay';
+            this.saveToStorage();
+        },
+
+        showSummary() {
             this.setRightVisible();
-            this.rightContent = 'essay';
+            this.rightContent = 'summary';
             this.saveToStorage();
         },
 
@@ -119,11 +133,6 @@ export const useLayoutStore = defineStore('layout',{
 
         setRightExpanded(expanded) {
             this.expandedColumn = expanded ? 'right' : 'none';
-            this.saveToStorage();
-        },
-
-        toggleTimer() {
-            this.showTimer = !this.showTimer;
             this.saveToStorage();
         }
     }

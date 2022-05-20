@@ -3,7 +3,7 @@ import localForage from "localforage";
 import {useApiStore} from "./api";
 
 const storage = localForage.createInstance({
-    storeName: "resources",
+    storeName: "corrector-resources",
     description: "Resource data",
 });
 
@@ -25,7 +25,7 @@ export const useResourcesStore = defineStore('resources',{
         hasResources: (state) => state.resources.length > 0,
 
         activeTitle(state) {
-          const resource = state.resources.find(element => element.key == state.active_key);
+          const resource = state.resources.find(element => element.key == state.activeKey);
 
           return resource ? resource.title : ""
         },
@@ -35,7 +35,7 @@ export const useResourcesStore = defineStore('resources',{
         },
 
         isActive(state) {
-            return (resource) => state.active_key == resource.key
+            return (resource) => state.activeKey == resource.key
         }
     },
 
@@ -99,7 +99,7 @@ export const useResourcesStore = defineStore('resources',{
         },
 
         async selectResource(resource) {
-            this.active_key = resource.key;
+            this.activeKey = resource.key;
             await storage.setItem('activeKey', this.activeKey);
         }
     }

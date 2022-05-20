@@ -18,7 +18,7 @@ const apiStore = useApiStore();
     <v-dialog persistent v-model="apiStore.showInitFailure">
       <v-card>
         <v-card-text>
-          <p>Beim Laden der Daten ist ein Fehler aufgetreten. Die Anwendung kann nicht gestartet werden.</p>
+          <p>Beim Laden der Basisdaten ist ein Fehler aufgetreten. Die Anwendung kann nicht gestartet werden.</p>
         </v-card-text>
         <v-card-actions>
           <v-btn :href="apiStore.returnUrl">
@@ -28,6 +28,21 @@ const apiStore = useApiStore();
         </v-card-actions>
       </v-card>
     </v-dialog>
+
+    <v-dialog persistent v-model="apiStore.showInitFailure">
+      <v-card>
+        <v-card-text>
+          <p>Beim Laden der zu korrigierenden Abgabe ist ein Fehler aufgetreten. Die Anwendung kann nicht gestartet werden.</p>
+        </v-card-text>
+        <v-card-actions>
+          <v-btn :href="apiStore.returnUrl">
+            <v-icon left icon="mdi-logout-variant"></v-icon>
+            <span>Beenden</span>
+          </v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
+
 
     <v-dialog persistent v-model="apiStore.showReplaceConfirmation">
       <v-card>
@@ -48,30 +63,6 @@ const apiStore = useApiStore();
         </v-card-actions>
       </v-card>
     </v-dialog>
-
-    <v-dialog persistent v-model="apiStore.showReloadConfirmation">
-      <v-card>
-        <v-card-text>
-          <p>In Ihrem Browser sind Eingaben vorhanden, die noch nicht übertragen wurden.
-            Die letzte im System gespeicherte Eingabe scheint aber nicht aus diesem Browser zu stammen.
-            Das kann z.B. passieren, wenn Ihre Netzverbindung unterbrochen wurde und Sie anschließend
-            in einem anderen Browser weitergearbeitet haben.
-            Durch das Laden werden Ihre Eingaben im Browser überschrieben.</p>
-          <p>Möchten Sie die Eingabe vom System laden?</p>
-        </v-card-text>
-        <v-card-actions>
-          <v-btn @click="apiStore.loadDataFromBackend()">
-            <v-icon left icon="mdi-reload"></v-icon>
-            <span>Laden</span>
-          </v-btn>
-          <v-btn :href="apiStore.returnUrl">
-            <v-icon left icon="mdi-logout-variant"></v-icon>
-            <span>Abbrechen</span>
-          </v-btn>
-        </v-card-actions>
-      </v-card>
-    </v-dialog>
-
   </v-main>
 </template>
 

@@ -5,8 +5,12 @@ import {useSettingsStore} from "./settings";
 import {useTaskStore} from "./task";
 import {useLayoutStore} from "./layout";
 import {useResourcesStore} from "./resources";
+import {useItemsStore} from "./items";
 import {useEssayStore} from "./essay";
+import {useSummaryStore} from "./summary";
 import md5 from 'md5';
+import {useLevelsStore} from "./levels";
+import {useCorrectorsStore} from "./correctors";
 
 /**
  * API Store
@@ -21,19 +25,16 @@ export const useApiStore = defineStore('api', {
             returnUrl: '',                      // url to be called when the wsriter is closed
             userKey: '',                        // identifying key of the writing user
             environmentKey: '',                 // identifying key of the writing envirnonment (defining the task)
+            itemKey: '',                        // identifying key of the correction item
             dataToken: '',                      // authentication token for transmission if data
             fileToken: '',                      // authentication token for loading files
             timeOffset: 0,                      // differnce between server time and client time (ms)
 
             // not saved
             initialized: false,                 // used to switch from startup screen to the editing view
-            review: false,                      // used to switch to the review and confirmation for a final submission
             showInitFailure: false,             // show a message that the initialisation failed
+            showItemLoadFailure: false,         // show a message that the loading if an item failed
             showReplaceConfirmation: false,     // show a confirmation that the stored data should be replaced by another task or user
-            showReloadConfirmation: false,      // show a confirmation that all data for the same task and user shod be reloaded from the server
-            showAuthorizeFailure: false,        // show a confirmation the sending of the final authorization failed
-            showFinalizeFailure: false,         // show a failure message for the final saving
-            showAuthorizeFailure: false,        // show a failure message for the final authorization
         }
     },
 
@@ -102,25 +103,34 @@ export const useApiStore = defineStore('api', {
         async init () {
 
             let newContext = false;
-            let lastHash = Cookies.get('LongEssayHash');
+            let newItem = false;
 
             // take values formerly stored
-            this.backendUrl = localStorage.getItem('backendUrl');
-            this.returnUrl = localStorage.getItem('returnUrl');
-            this.userKey = localStorage.getItem('userKey');
-            this.environmentKey = localStorage.getItem('environmentKey');
-            this.dataToken = localStorage.getItem('dataToken');
-            this.fileToken = localStorage.getItem('dataToken');
-            this.timeOffset = Math.floor(localStorage.getItem('timeOffset') ?? 0);
+            this.backendUrl = localStorage.getItem('correctorBackendUrl');
+            this.returnUrl = localStorage.getItem('correctorReturnUrl');
+            this.userKey = localStorage.getItem('correctorUserKey');
+            this.itemKey = localStorage.getItem('correctorItemKey');
+            this.environmentKey = localStorage.getItem('correctorEnvironmentKey');
+            this.dataToken = localStorage.getItem('correctorDataToken');
+            this.fileToken = localStorage.getItem('correctorFileToken');
+            this.timeOffset = Math.floor(localStorage.getItem('correctorTimeOffset') ?? 0);
 
             // check if context given by cookies differs and force a reload if neccessary
             if (!!Cookies.get('LongEssayUser') && Cookies.get('LongEssayUser') !== this.userKey) {
                 this.userKey = Cookies.get('LongEssayUser');
+                // stored item key is not valid for a new context
+                this.itemKey = '';
                 newContext = true;
             }
             if (!!Cookies.get('LongEssayEnvironment') && Cookies.get('LongEssayEnvironment') !== this.environmentKey) {
                 this.environmentKey = Cookies.get('LongEssayEnvironment');
+                // stored item key is not valid for a new context
+                this.itemKey = '';
                 newContext = true;
+            }
+            if (!!Cookies.get('LongEssayItem') && Cookies.get('LongEssayItem') !== this.itemKey) {
+                this.itemKey = Cookies.get('LongEssayItem');
+                newItem = true;
             }
 
             // these values can be changed without forcing a reload
@@ -140,49 +150,47 @@ export const useApiStore = defineStore('api', {
                 return;
             }
 
-            const essayStore = useEssayStore();
+            const summaryStore = useSummaryStore();
 
             if (newContext) {
                 // switching to a new task or user always requires a load from the backend
                 // be shure that existing data is not unintentionally replaced
 
-                if (await essayStore.hasUnsentSavingsInStorage()) {
-                    console.log('init: new context, open savings');
+                if (await summaryStore.hasUnsentSavingInStorage()) {
+                    console.log('init: new context, open saving');
                     this.showReplaceConfirmation = true;
                 }
                 else {
-                    console.log('init: new context, no open savings');
+                    console.log('init: new context, no open saving');
                     await this.loadDataFromBackend();
+                    await this.loadItemFromBackend(this.itemKey);
                 }
             }
-            else if (lastHash) {
-                // savings already exists on the server
-                // check that it matches with the data in the app
+            else if (newItem) {
+                // switching to a new task or user always requires a load from the backend
+                // be shure that existing data is not unintentionally replaced
 
-                if (await essayStore.hasHashInStorage(lastHash)) {
-                    console.log('init: same context, same hash');
-                    await this.loadDataFromStorage();
-                }
-                else if (await essayStore.hasUnsentSavingsInStorage()) {
-                    console.log('init: same context, hashes differ, open savings');
-                    this.showReloadConfirmation = true;
+                if (await summaryStore.hasUnsentSavingInStorage()) {
+                    console.log('init: new item, open saving');
+                    this.showReplaceConfirmation = true;
                 }
                 else {
-                    console.log('init: same context, hashes differ, no open savings');
-                    await this.loadDataFromBackend();
+                    console.log('init: new item, no open saving');
+                    await this.loadItemFromBackend(this.itemKey);
                 }
             }
             else {
                 // no savings exist on the server
                 // check if data is already entered but not sent
 
-                if (await essayStore.hasUnsentSavingsInStorage()) {
-                    console.log('init: same context, no server hash, open savings');
+                if (await summaryStore.hasUnsentSavingInStorage()) {
+                    console.log('init: same context, no server hash, open saving');
                     await this.loadDataFromStorage();
                 }
                 else {
-                    console.log('init: same context, no server hash, no open savings');
+                    console.log('init: same context, no server hash, no open saving');
                     await this.loadDataFromBackend();
+                    await this.loadItemFromBackend(this.itemKey);
                 }
             }
         },
@@ -198,14 +206,20 @@ export const useApiStore = defineStore('api', {
             const settingsStore = useSettingsStore();
             const taskStore = useTaskStore();
             const resourcesStore = useResourcesStore();
-            const essayStore = useEssayStore();
             const layoutStore = useLayoutStore();
+            const itemsStore = useItemsStore();
+            const essayStore = useEssayStore();
+            const correctorsStore = useCorrectorsStore();
+            const summaryStore = useSummaryStore();
 
             await settingsStore.loadFromStorage();
             await taskStore.loadFromStorage();
             await resourcesStore.loadFromStorage();
-            await essayStore.loadFromStorage();
             await layoutStore.loadFromStorage();
+            await itemsStore.loadFromStorage();
+            await essayStore.loadFromStorage();
+            await correctorsStore.loadFromStorage();
+            await summaryStore.loadFromStorage();
 
             this.initialized = true;
         },
@@ -231,57 +245,64 @@ export const useApiStore = defineStore('api', {
                 return;
             }
 
-            const settingsStore = useSettingsStore();
             const taskStore = useTaskStore();
+            const settingsStore = useSettingsStore();
             const resourcesStore = useResourcesStore();
-            const essayStore = useEssayStore();
+            const levelsStore = useLevelsStore();
+            const itemsStore = useItemsStore();
 
-            await settingsStore.loadFromData(response.data.settings);
             await taskStore.loadFromData(response.data.task);
+            await settingsStore.loadFromData(response.data.settings);
             await resourcesStore.loadFromData(response.data.resources);
-            await essayStore.loadFromData(response.data.essay);
-
-            // send the time when the working on the task is started
-            if (!response.data.essay.started) {
-                await this.sendStart();
-            }
-            this.initialized = true;
+            await levelsStore.loadFromData(response.data.levels);
+            await itemsStore.loadFromData(response.data.items);
         },
 
 
         /**
-         * Send the time when the editing has started
+         * Load the data of a new correction item from the backend
          */
-        async sendStart() {
+        async loadItemFromBackend(itemKey) {
+
+            console.log("loadItemFromBackend...");
+
+            if (itemKey == '') {
+                const itemsStore = useItemsStore();
+                itemKey = itemsStore.firstKey
+            }
 
             let response = {};
-            let data = {
-                started: this.serverTime(Date.now())
-            }
             try {
-                response = await axios.put( '/start', data, this.requestConfig(this.dataToken));
+                response = await axios.get( '/item/' + itemKey, this.requestConfig(this.dataToken));
                 this.setTimeOffset(response);
                 this.refreshToken(response);
-                return true;
             }
             catch (error) {
                 console.error(error);
-                this.showInitFailure = true;
-                return false;
+                this.showItemLoadFailure = true;
+                return;
             }
-        },
 
+            const essayStore = useEssayStore();
+            const correctorsStore = useCorrectorsStore();
+            const summaryStore = useSummaryStore();
+
+            await essayStore.loadFromData(response.data.essay);
+            await correctorsStore.loadFromData(response.data.correctors);
+            await summaryStore.loadFromData(response.data.summary);
+
+            this.itemKey = itemKey;
+            localStorage.setItem('itemKey', this.itemKey);
+            this.initialized = true;
+        },
 
         /**
          * Save the writing steps to the backend
          */
-        async saveWritingStepsToBackend(steps) {
+        async saveSummaryToBackend(data) {
             let response = {};
-            let data = {
-                steps: steps
-            }
             try {
-                response = await axios.put( '/steps', data, this.requestConfig(this.dataToken));
+                response = await axios.put( '/summary/' + this.itemKey, data, this.requestConfig(this.dataToken));
                 this.setTimeOffset(response);
                 this.refreshToken(response);
                 return true;
@@ -291,30 +312,6 @@ export const useApiStore = defineStore('api', {
                 return false;
             }
         },
-
-
-        /**
-         * Save the final authorization to the backend
-         */
-        async saveFinalContentToBackend(steps, content, hash, authorized) {
-            let response = {};
-            let data = {
-                steps: steps,
-                content: content,
-                hash: hash,
-                authorized: authorized
-            }
-            try {
-                response = await axios.put( '/final', data, this.requestConfig(this.dataToken));
-                this.refreshToken(response);
-                return true;
-            }
-            catch (error) {
-                console.error(error);
-                return false;
-            }
-        },
-
 
         /**
          * Update the app configuration
@@ -329,15 +326,16 @@ export const useApiStore = defineStore('api', {
             Cookies.remove('LongEssayReturn');
             Cookies.remove('LongEssayUser');
             Cookies.remove('LongEssayEnvironment');
+            Cookies.remove('LongEssayItem');
             Cookies.remove('LongEssayToken');
-            Cookies.remove('LongEssayHash');
 
-            localStorage.setItem('backendUrl', this.backendUrl);
-            localStorage.setItem('returnUrl', this.returnUrl);
-            localStorage.setItem('userKey', this.userKey);
-            localStorage.setItem('environmentKey', this.environmentKey);
-            localStorage.setItem('dataToken', this.dataToken);
-            localStorage.setItem('fileToken', this.fileToken);
+            localStorage.setItem('correctorBackendUrl', this.backendUrl);
+            localStorage.setItem('correctorReturnUrl', this.returnUrl);
+            localStorage.setItem('correctorUserKey', this.userKey);
+            localStorage.setItem('correctorEnvironmentKey', this.environmentKey);
+            localStorage.setItem('correctorItemKey', this.itemKey);
+            localStorage.setItem('correctorDataToken', this.dataToken);
+            localStorage.setItem('correctorFileToken', this.fileToken);
         },
 
 
@@ -352,7 +350,7 @@ export const useApiStore = defineStore('api', {
             const clientTimeMs = Date.now();
 
             this.timeOffset = clientTimeMs - serverTimeMs;
-            localStorage.setItem('timeOffset', this.timeOffset);
+            localStorage.setItem('correctorTimeOffset', this.timeOffset);
         },
 
         /**
@@ -364,47 +362,13 @@ export const useApiStore = defineStore('api', {
         refreshToken(response) {
             if (response.headers['longessaydatatoken']) {
                 this.dataToken = response.headers['longessaydatatoken'];
-                localStorage.setItem('dataToken', this.dataToken);
+                localStorage.setItem('correctorDataToken', this.dataToken);
             }
 
             if (response.headers['longessayfiletoken']) {
                 this.fileToken = response.headers['longessayfiletoken'];
-                localStorage.setItem('fileToken', this.fileToken);
+                localStorage.setItem('correctorFileToken', this.fileToken);
             }
-        },
-
-        /**
-         * Finalize the writing
-         */
-        async finalize(authorize) {
-
-            const settingsStore = useSettingsStore();
-            const taskStore = useTaskStore();
-            const resourcesStore = useResourcesStore();
-            const essayStore = useEssayStore();
-            const layoutStore = useLayoutStore();
-
-            if (authorize || essayStore.openSendings > 0) {
-                if (!await this.saveFinalContentToBackend (
-                    essayStore.unsentHistory,
-                    essayStore.storedContent,
-                    essayStore.storedHash,
-                    authorize,
-                )) {
-                    this.showFinalizeFailure = true
-                    this.showAuthorizeFailure = authorize
-                    return;
-                }
-            }
-
-            await settingsStore.clearStorage();
-            await taskStore.clearStorage();
-            await resourcesStore.clearStorage();
-            await essayStore.clearStorage();
-            await layoutStore.clearStorage();
-            localStorage.clear();
-
-            window.location = this.returnUrl;
         }
     }
 })
