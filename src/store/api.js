@@ -8,9 +8,9 @@ import {useResourcesStore} from "./resources";
 import {useItemsStore} from "./items";
 import {useEssayStore} from "./essay";
 import {useSummaryStore} from "./summary";
-import md5 from 'md5';
 import {useLevelsStore} from "./levels";
 import {useCorrectorsStore} from "./correctors";
+import md5 from 'md5';
 
 /**
  * API Store
@@ -259,12 +259,14 @@ export const useApiStore = defineStore('api', {
             const settingsStore = useSettingsStore();
             const taskStore = useTaskStore();
             const resourcesStore = useResourcesStore();
+            const levelsStore = useLevelsStore();
             const layoutStore = useLayoutStore();
             const itemsStore = useItemsStore();
 
             await settingsStore.loadFromStorage();
             await taskStore.loadFromStorage();
             await resourcesStore.loadFromStorage();
+            await levelsStore.loadFromStorage();
             await layoutStore.loadFromStorage();
             await itemsStore.loadFromStorage();
 
@@ -311,6 +313,7 @@ export const useApiStore = defineStore('api', {
             const settingsStore = useSettingsStore();
             const resourcesStore = useResourcesStore();
             const levelsStore = useLevelsStore();
+            const layoutStore = useLayoutStore();
             const itemsStore = useItemsStore();
 
             await taskStore.loadFromData(response.data.task);
@@ -318,6 +321,7 @@ export const useApiStore = defineStore('api', {
             await resourcesStore.loadFromData(response.data.resources);
             await levelsStore.loadFromData(response.data.levels);
             await itemsStore.loadFromData(response.data.items);
+            await layoutStore.clearStorage();
 
             return true;
         },
