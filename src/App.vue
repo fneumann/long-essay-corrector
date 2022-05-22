@@ -42,6 +42,14 @@ html {
   margin-bottom: 10px;
 }
 
+/* needed to avoid highlight of selected NavBar item, must be global */
+.v-list-item__overlay {
+  visibility: hidden !important;
+}
+
+.v-navigation-drawer__content {
+  background-color: #fafafa;
+}
 
 
 </style>

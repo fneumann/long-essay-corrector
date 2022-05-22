@@ -34,7 +34,8 @@ export const useApiStore = defineStore('api', {
             initialized: false,                 // used to switch from startup screen to the editing view
             showInitFailure: false,             // show a message that the initialisation failed
             showItemLoadFailure: false,         // show a message that the loading if an item failed
-            showReplaceConfirmation: false,     // show a confirmation that the stored data should be replaced by another task or user
+            showDataReplaceConfirmation: false, // show a confirmation that the stored data should be replaced by another task or user
+            showItemReplaceConfirmation: false, // show a confirmation that the stored item should be replaced by another item
         }
     },
 
@@ -158,70 +159,133 @@ export const useApiStore = defineStore('api', {
 
                 if (await summaryStore.hasUnsentSavingInStorage()) {
                     console.log('init: new context, open saving');
-                    this.showReplaceConfirmation = true;
+                    this.showDataReplaceConfirmation = true;
                 }
                 else {
                     console.log('init: new context, no open saving');
-                    await this.loadDataFromBackend();
-                    await this.loadItemFromBackend(this.itemKey);
+                    if (await this.loadDataFromBackend()) {
+                        this.initialized =  await this.loadItemFromBackend(this.itemKey);
+                    }
+                    this.updateConfig();
                 }
             }
             else if (newItem) {
-                // switching to a new task or user always requires a load from the backend
+                // switching to a new correction item requires a load of the item related data
                 // be shure that existing data is not unintentionally replaced
 
                 if (await summaryStore.hasUnsentSavingInStorage()) {
-                    console.log('init: new item, open saving');
-                    this.showReplaceConfirmation = true;
+                    console.log('init: new item, with open saving');
+                    this.showItemReplaceConfirmation = true;
                 }
                 else {
                     console.log('init: new item, no open saving');
-                    await this.loadItemFromBackend(this.itemKey);
+                    if (await this.loadDataFromStorage()) {
+                        this.initialized = await this.loadItemFromBackend(this.itemKey);
+                    }
+                    this.updateConfig();
                 }
             }
             else {
-                // no savings exist on the server
+                // context and item are the same
                 // check if data is already entered but not sent
 
                 if (await summaryStore.hasUnsentSavingInStorage()) {
-                    console.log('init: same context, no server hash, open saving');
-                    await this.loadDataFromStorage();
+                    console.log('init: same context and item, with open saving');
+                    if (await this.loadDataFromStorage()) {
+                        this.initialized = await this.loadItemFromStorage();
+                    }
+                    this.updateConfig();
                 }
                 else {
-                    console.log('init: same context, no server hash, no open saving');
-                    await this.loadDataFromBackend();
-                    await this.loadItemFromBackend(this.itemKey);
+                    console.log('init: same context and item, no open saving');
+                    if (await this.loadDataFromStorage()) {
+                        this.initialized = await this.loadItemFromBackend(this.itemKey);
+                    }
+                    this.updateConfig();
                 }
             }
         },
 
         /**
+         * init after the replacement of all data is confirmed
+         */
+        async initAfterReplaceDataConfirmed() {
+            if (this.loadDataFromBackend()) {
+                this.initialized =  await this.loadItemFromBackend(this.itemKey);
+            }
+            this.initialized = false;
+            this.updateConfig();
+        },
+
+        /**
+         * init after the replacement of the item is confirmed
+         */
+        async initAfterReplaceItemConfirmed() {
+            this.initialized = await this.loadItemFromBackend(this.itemKey);
+            this.updateConfig();
+        },
+
+        /**
+         * Update the app configuration
+         * This is called when the initialisation can be done silently
+         * Or when a confirmation dialog is confirmed
+         */
+        updateConfig() {
+            // remove the cookies
+            // needed to distinct the call from the backend from a later reload
+            Cookies.remove('LongEssayBackend');
+            Cookies.remove('LongEssayReturn');
+            Cookies.remove('LongEssayUser');
+            Cookies.remove('LongEssayEnvironment');
+            Cookies.remove('LongEssayItem');
+            Cookies.remove('LongEssayToken');
+
+            localStorage.setItem('correctorBackendUrl', this.backendUrl);
+            localStorage.setItem('correctorReturnUrl', this.returnUrl);
+            localStorage.setItem('correctorUserKey', this.userKey);
+            localStorage.setItem('correctorEnvironmentKey', this.environmentKey);
+            localStorage.setItem('correctorItemKey', this.itemKey);
+            localStorage.setItem('correctorDataToken', this.dataToken);
+            localStorage.setItem('correctorFileToken', this.fileToken);
+        },
+
+
+        /**
          * Load all data from the storage
          */
         async loadDataFromStorage() {
-
             console.log("loadDataFromStorage...");
-            this.updateConfig();
 
             const settingsStore = useSettingsStore();
             const taskStore = useTaskStore();
             const resourcesStore = useResourcesStore();
             const layoutStore = useLayoutStore();
             const itemsStore = useItemsStore();
-            const essayStore = useEssayStore();
-            const correctorsStore = useCorrectorsStore();
-            const summaryStore = useSummaryStore();
 
             await settingsStore.loadFromStorage();
             await taskStore.loadFromStorage();
             await resourcesStore.loadFromStorage();
             await layoutStore.loadFromStorage();
             await itemsStore.loadFromStorage();
+
+            return true;
+        },
+
+        /**
+         * Load all data from the storage
+         */
+        async loadItemFromStorage() {
+            console.log("loadItemFromStorage...");
+
+            const essayStore = useEssayStore();
+            const correctorsStore = useCorrectorsStore();
+            const summaryStore = useSummaryStore();
+
             await essayStore.loadFromStorage();
             await correctorsStore.loadFromStorage();
             await summaryStore.loadFromStorage();
 
-            this.initialized = true;
+            return true;
         },
 
 
@@ -229,9 +293,7 @@ export const useApiStore = defineStore('api', {
          * Load all data from the backend
          */
         async loadDataFromBackend() {
-
             console.log("loadDataFromBackend...");
-            this.updateConfig();
 
             let response = {};
             try {
@@ -242,7 +304,7 @@ export const useApiStore = defineStore('api', {
             catch (error) {
                 console.error(error);
                 this.showInitFailure = true;
-                return;
+                return false;
             }
 
             const taskStore = useTaskStore();
@@ -256,6 +318,8 @@ export const useApiStore = defineStore('api', {
             await resourcesStore.loadFromData(response.data.resources);
             await levelsStore.loadFromData(response.data.levels);
             await itemsStore.loadFromData(response.data.items);
+
+            return true;
         },
 
 
@@ -280,7 +344,7 @@ export const useApiStore = defineStore('api', {
             catch (error) {
                 console.error(error);
                 this.showItemLoadFailure = true;
-                return;
+                return false;
             }
 
             const essayStore = useEssayStore();
@@ -293,7 +357,7 @@ export const useApiStore = defineStore('api', {
 
             this.itemKey = itemKey;
             localStorage.setItem('itemKey', this.itemKey);
-            this.initialized = true;
+            return true;
         },
 
         /**
@@ -311,31 +375,6 @@ export const useApiStore = defineStore('api', {
                 console.error(error);
                 return false;
             }
-        },
-
-        /**
-         * Update the app configuration
-         * This is called when the initialisation can be done silently
-         * Or when a confirmation dialog is confirmed
-         */
-        updateConfig() {
-
-            // remove the cookies
-            // needed to distinct the call from the backend from a later reload
-            Cookies.remove('LongEssayBackend');
-            Cookies.remove('LongEssayReturn');
-            Cookies.remove('LongEssayUser');
-            Cookies.remove('LongEssayEnvironment');
-            Cookies.remove('LongEssayItem');
-            Cookies.remove('LongEssayToken');
-
-            localStorage.setItem('correctorBackendUrl', this.backendUrl);
-            localStorage.setItem('correctorReturnUrl', this.returnUrl);
-            localStorage.setItem('correctorUserKey', this.userKey);
-            localStorage.setItem('correctorEnvironmentKey', this.environmentKey);
-            localStorage.setItem('correctorItemKey', this.itemKey);
-            localStorage.setItem('correctorDataToken', this.dataToken);
-            localStorage.setItem('correctorFileToken', this.fileToken);
         },
 
 

@@ -71,7 +71,7 @@ export const useItemsStore = defineStore('items',{
                 this.items = [];
 
                 let index = 0;
-                while (index < this.items.length) {
+                while (index < this.keys.length) {
                     let item = await storage.getItem(this.keys[index]);
                     this.items.push(item);
                     index++;

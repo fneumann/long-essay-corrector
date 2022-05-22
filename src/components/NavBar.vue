@@ -34,9 +34,9 @@ function getResourceIcon(resource) {
 </script>
 
 <template>
-  <v-navigation-drawer id="app-navigation-drawer" elevation="2" color="grey-lighten-4" width="500" permanent rail expand-on-hover>
+  <v-navigation-drawer id="app-navigation-drawer" elevation="2" width="500" permanent rail expand-on-hover>
 
-    <v-list color="grey-lighten-4" >
+    <v-list>
       <v-list-item @click="layoutStore.showInstructions(); closeNavigation();"
                    :prepend-icon="layoutStore.isInstructionsVisible ? 'mdi-text-box': 'mdi-text-box-outline'"
                    title="Aufgabenstellung">
@@ -52,7 +52,7 @@ function getResourceIcon(resource) {
 
       <v-list-group v-show="resourcesStore.hasResources">
         <template v-slot:activator="{ props }">
-          <v-list-item v-bind="props"
+          <v-list-item active-class="appNavActive" v-bind="props"
                        @mouseenter="openNavigation()"
                        :prepend-icon="layoutStore.isResourcesVisible ? 'mdi-book-open' : 'mdi-book-open-outline'"
                        title="Material">
@@ -76,7 +76,13 @@ function getResourceIcon(resource) {
 <style scoped>
 
 .v-list {
-  overflow-x: hidden
+  overflow-x: hidden;
+  background-color: #fafafa;
+}
+
+/* avoid highlight, when selected, see also App.vue */
+.v-list-item, v-list-group {
+  color: #000000!important;
 }
 
 </style>

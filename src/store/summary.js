@@ -189,6 +189,11 @@ export const useSummaryStore = defineStore('summary',{
          */
         async sendUpdate() {
 
+            // everything is sent - don't send again
+            if (this.isSent) {
+                return;
+            }
+
             // avoid too many sendings
             // sendUpdate is called from updateContent with the checkInterval
             if (Date.now() - this.lastSending < sendInterval) {
