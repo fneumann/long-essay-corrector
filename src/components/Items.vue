@@ -23,14 +23,16 @@
    <template v-for="item in itemsStore.items" :key="item.key">
      <div v-if="item.key == apiStore.itemKey">
 
-       <v-btn v-show="item.key != itemsStore.firstKey" @click="previousItem(item.key)">
-         <v-icon left icon="mdi-menu-left"></v-icon>
+       <span>{{ taskStore.title}} </span>
+
+       <v-btn :disabled="item.key == itemsStore.firstKey" @click="previousItem(item.key)">
+         <v-icon left icon="mdi-arrow-left-bold"></v-icon>
        </v-btn>
 
-       <span>{{ taskStore.title}} - {{ item.title }}</span>
+       <span>{{ item.title }}</span>
 
-       <v-btn v-show="item.key != itemsStore.lastKey" @click="nextItem(item.key)">
-         <v-icon left icon="mdi-menu-right"></v-icon>
+       <v-btn :disabled="item.key == itemsStore.lastKey" @click="nextItem(item.key)">
+         <v-icon left icon="mdi-arrow-right-bold"></v-icon>
        </v-btn>
      </div>
    </template>
