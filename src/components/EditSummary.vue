@@ -16,7 +16,11 @@ import 'tinymce/plugins/charmap';
 import Editor from '@tinymce/tinymce-vue'
 
 import {useSummaryStore} from '@/store/summary';
+import {useLevelsStore} from '@/store/levels';
+import {useSettingsStore} from '@/store/settings';
 const summaryStore = useSummaryStore();
+const levelsStore = useLevelsStore();
+const settingsStore = useSettingsStore();
 
 function toolbar() {
   switch ('full')
@@ -38,24 +42,53 @@ const id = "summary";
 </script>
 
 <template>
-  <editor
-      :id="id"
-      v-model="summaryStore.currentContent"
-      @change="summaryStore.updateContent(true)"
-      @keyup="summaryStore.updateContent(true)"
-      api-key="no-api-key"
-      :init="{
+  <div class="appSummaryContainer">
+    <editor
+        :id="id"
+        v-model="summaryStore.currentContent"
+        @change="summaryStore.updateContent(true)"
+        @keyup="summaryStore.updateContent(true)"
+        api-key="no-api-key"
+        :init="{
         height: '100%',
         menubar: false,
         plugins: 'lists charmap',
         toolbar: toolbar(),
         custom_undo_redo_levels: 10
        }"
-  />
+    />
+  </div>
+  <div class="appRatingContainer">
+
+    <label for="appSummaryPoints">Punkte: </label>
+    <input id="appSummaryPoints" class="appRatingControl" type="number" min="0" :max="settingsStore.max_points" v-model="summaryStore.currentPoints" />
+
+    <label for="appSummaryGradeKey">Bewertung: </label>
+    <select id="appSummaryGradeKey" class="appRatingControl" v-model="summaryStore.currentGradeKey">
+      <option disabled value="">Bitte wählen:</option>
+      <option v-for="level in levelsStore.levels" :key="level.key" :value="level.key">{{level.title}}</option>
+    </select>
+  </div>
 </template>
 
 <style>
 .tox-statusbar {
   display: none!important;
+}
+
+.appSummaryContainer {
+  height: calc(100% - 50px);
+}
+
+.appRatingContainer {
+  height: 50px;
+  padding-top: 10px;
+}
+
+.appRatingControl {
+  border: 1px solid lightgray;
+  margin-left: 10px;
+  margin-right: 10px;
+  padding: 5px;
 }
 </style>
