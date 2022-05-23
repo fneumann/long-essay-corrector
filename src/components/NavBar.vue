@@ -1,8 +1,10 @@
 <script setup>
 import {useLayoutStore} from "../store/layout";
 import {useResourcesStore} from "../store/resources";
+import {useCorrectorsStore} from "../store/correctors";
 const layoutStore = useLayoutStore();
 const resourcesStore = useResourcesStore();
+const correctorsStore = useCorrectorsStore();
 
 function openNavigation() {
   document.getElementById('app-navigation-drawer').dispatchEvent(new Event('mouseenter'));
@@ -22,6 +24,11 @@ function selectResource(resource) {
   }
 }
 
+function selectCorrector(corrector) {
+    correctorsStore.selectCorrector(corrector);
+    layoutStore.showCorrectors();
+}
+
 function getResourceIcon(resource) {
   switch (resource.type) {
     case "url":
@@ -31,6 +38,9 @@ function getResourceIcon(resource) {
   }
 }
 
+function getCorrectorIcon(corrector) {
+  return (correctorsStore.isActive(corrector) && layoutStore.isCorrectorsVisible) ? "mdi-account" : "mdi-account-outline"
+}
 </script>
 
 <template>
@@ -67,6 +77,25 @@ function getResourceIcon(resource) {
         </v-list-item>
 
       </v-list-group>
+
+      <v-list-group v-show="correctorsStore.hasCorrectors">
+        <template v-slot:activator="{ props }">
+          <v-list-item active-class="appNavActive" v-bind="props"
+                       @mouseenter="openNavigation()"
+                       :prepend-icon="layoutStore.isCorrectorsVisible ? 'mdi-account-supervisor' : 'mdi-account-supervisor-outline'"
+                       title="Andere Korrektoren">
+          </v-list-item>
+        </template>
+
+        <v-list-item v-for="corrector in correctorsStore.correctors"
+                     @click="selectCorrector(corrector); closeNavigation();"
+                     :prepend-icon="getCorrectorIcon(corrector)"
+                     :title="corrector.title"
+                     :key="corrector.key">
+        </v-list-item>
+
+      </v-list-group>
+
 
     </v-list>
 

@@ -25,8 +25,7 @@ export const useCorrectorsStore = defineStore('correctors',{
 
         activeTitle(state) {
           const corrector = state.correctors.find(element => element.key == state.activeKey);
-
-          return corrector ? corrector.title : ""
+          return corrector ? 'Korrektur von ' + corrector.title : ""
         },
 
         getCorrector(state) {
