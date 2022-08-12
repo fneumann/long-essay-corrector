@@ -17,12 +17,14 @@ const startState = {
     storedContent: '',          // full content corresponding to the storage
     storedPoints: 0,
     storedGradeKey: '',
+    storedIsAuthorized: false,
     isSent: true,               // stored content is sent to the server
 
     // not saved
     currentContent: '',         // directly mapped to the tiny editor, changes permanently !!!
     currentPoints: 0,
     currentGradeKey: '',
+    currentIsAuthorized: false,
     lastCheck: 0,               // timestamp (ms) of the last check if an update needs a saving
     lastSave: 0,                // timestamp (ms) of the last save in the store
     lastSending: 0,             // timestamp (ms) of the last sending to the backend
@@ -69,15 +71,20 @@ export const useSummaryStore = defineStore('summary',{
                 this.currentContent = data.text ?? '';
                 this.currentPoints = data.points ?? 0;
                 this.currentGradeKey = data.grade_key ?? 0;
+                this.currentIsAuthorized = data.is_authorized ?? false;
                 this.storedContent = this.currentContent;
                 this.storedPoints = this.currentPoints;
                 this.storedGradeKey = this.currentGradeKey;
+                this.storedIsAuthorized = this.currentIsAuthorized;
+
                 this.isSent = true
+                this.showAuthorization = false
 
                 await storage.clear();
                 await storage.setItem('storedContent', this.storedContent);
                 await storage.setItem('storedPoints', this.storedPoints);
                 await storage.setItem('storedGradeKey', this.storedGradeKey);
+                await storage.setItem('storedIsAuthorized', this.storedIsAuthorized);
                 await storage.setItem('isSent', this.isSent);
 
             } catch (err) {
@@ -101,10 +108,12 @@ export const useSummaryStore = defineStore('summary',{
                 this.storedContent =  await storage.getItem('storedContent') ?? '';
                 this.storedPoints =  await storage.getItem('storedPoints') ?? 0;
                 this.storedGradeKey =  await storage.getItem('storedGradeKey') ?? '';
+                this.storedIsAuthorized =  await storage.getItem('storedIsAuthorized') ?? '';
                 this.isSent =  await storage.getItem('isSent') ?? true;
                 this.currentContent = this.storedContent;
                 this.currentPoints = this.storedPoints;
                 this.currentGradeKey = this.storedGradeKey;
+                this.currentIsAuthorized = this.storedIsAuthorized;
 
             } catch (err) {
                 console.log(err);
@@ -124,6 +133,11 @@ export const useSummaryStore = defineStore('summary',{
          * Call sending to the backend (don't wait)
          */
         async updateContent(fromEditor = false) {
+
+            // don't update if authorized
+            if (this.storedIsAuthorized) {
+                return;
+            }
 
             // avoid too many checks
             const currentTime = Date.now();
@@ -148,21 +162,25 @@ export const useSummaryStore = defineStore('summary',{
                 const currentContent = this.currentContent + '';   // ensure it is not changed because content in state  is bound to tiny
                 const currentPoints= this.currentPoints + 0;
                 const currentGradeKey = this.currentGradeKey + '';
+                const currentIsAuthorized = this.currentIsAuthorized;
 
                 if (currentContent != this.storedContent
                     || currentPoints != this.storedPoints
                     || currentGradeKey != this.storedGradeKey
+                    || currentIsAuthorized != this.storedIsAuthorized
                 ) {
                     this.isSent = false;
                     this.storedContent = currentContent;
                     this.storedPoints = currentPoints;
                     this.storedGradeKey = currentGradeKey;
+                    this.storedIsAuthorized = currentIsAuthorized;
 
                     // save in storage
                     await storage.setItem('isSent', this.isSent);
                     await storage.setItem('storedContent', this.storedContent);
                     await storage.setItem('storedPoints', this.storedPoints);
                     await storage.setItem('storedGradeKey', this.storedGradeKey);
+                    await storage.setItem('storedIsAuthorized', this.storedIsAuthorized);
 
                     console.log(
                         "Save Change ",
@@ -210,7 +228,8 @@ export const useSummaryStore = defineStore('summary',{
             const data = {
                 'text': this.storedContent,
                 'points': this.storedPoints,
-                'grade_key': this.storedGradeKey
+                'grade_key': this.storedGradeKey,
+                'is_authorized': this.storedIsAuthorized
             }
 
             const apiStore = useApiStore();

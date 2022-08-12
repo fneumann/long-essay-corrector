@@ -37,12 +37,17 @@ function toolbar() {
   }
 }
 
+function setAuthorized() {
+  summaryStore.currentIsAuthorized = true;
+  summaryStore.showAuthorization = false;
+}
+
 // Used for retrieving the editor instance using the tinymce.get('ID') method.
 const id = "summary";
 </script>
 
 <template>
-  <div class="appSummaryContainer">
+  <div v-show="!summaryStore.storedIsAuthorized" class="appSummaryContainer">
     <editor
         :id="id"
         v-model="summaryStore.currentContent"
@@ -54,20 +59,48 @@ const id = "summary";
         menubar: false,
         plugins: 'lists charmap',
         toolbar: toolbar(),
-        custom_undo_redo_levels: 10
+        custom_undo_redo_levels: 10,
        }"
     />
   </div>
+  <div v-show="summaryStore.storedIsAuthorized" class="appSummaryContainer" v-html="summaryStore.currentContent">
+  </div>
+
   <div class="appRatingContainer">
 
     <label for="appSummaryPoints">Punkte: </label>
-    <input id="appSummaryPoints" class="appRatingControl" type="number" min="0" :max="settingsStore.max_points" v-model="summaryStore.currentPoints" />
+    <input :disabled="summaryStore.storedIsAuthorized" id="appSummaryPoints" class="appRatingControl" type="number" min="0" :max="settingsStore.max_points" v-model="summaryStore.currentPoints" />
 
     <label for="appSummaryGradeKey">Bewertung: </label>
-    <select id="appSummaryGradeKey" class="appRatingControl" v-model="summaryStore.currentGradeKey">
+    <select :disabled="summaryStore.storedIsAuthorized" id="appSummaryGradeKey" class="appRatingControl" v-model="summaryStore.currentGradeKey">
       <option disabled value="">Bitte wählen:</option>
       <option v-for="level in levelsStore.levels" :key="level.key" :value="level.key">{{level.title}}</option>
     </select>
+
+    <v-btn v-show="!summaryStore.storedIsAuthorized" @click="summaryStore.showAuthorization=true">
+      <span>Autorisieren...</span>
+    </v-btn>
+
+    <span v-show="summaryStore.storedIsAuthorized">(autorisiert)</span>
+
+    <v-dialog persistent v-model="summaryStore.showAuthorization">
+      <v-card>
+        <v-card-text>
+          <p>Durch die Autorisierung wird Ihre Korrektur festgeschrieben. Sie können sie anschließend nicht mehr ändern. Möchten Sie Ihre Korrektur autorisieren?</p>
+        </v-card-text>
+        <v-card-actions>
+          <v-btn @click="setAuthorized()">
+            <v-icon left icon="mdi-check"></v-icon>
+            <span>Autorisieren</span>
+          </v-btn>
+          <v-btn @click="summaryStore.showAuthorization=false">
+            <v-icon left icon="mdi-close"></v-icon>
+            <span>Abbrechen</span>
+          </v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
+
   </div>
 </template>
 

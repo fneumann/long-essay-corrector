@@ -365,7 +365,7 @@ export const useApiStore = defineStore('api', {
         },
 
         /**
-         * Save the writing steps to the backend
+         * Save the correction summars to the backend
          */
         async saveSummaryToBackend(data) {
             let response = {};
