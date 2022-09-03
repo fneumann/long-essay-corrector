@@ -199,7 +199,13 @@ export const useApiStore = defineStore('api', {
                 else {
                     console.log('init: same context and item, no open saving');
                     if (await this.loadDataFromStorage()) {
-                        this.initialized = await this.loadItemFromBackend(this.itemKey);
+                        if (await this.loadItemFromBackend(this.itemKey)) {
+                            this.initialized = true;
+                        }
+                        else if (await this.loadDataFromBackend()) {
+                            this.itemKey = '';
+                            this.initialized = await this.loadItemFromBackend(this.itemKey);
+                        }
                     }
                     this.updateConfig();
                 }
