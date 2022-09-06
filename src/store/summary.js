@@ -2,6 +2,7 @@ import { defineStore } from 'pinia';
 import localForage from "localforage";
 import {useApiStore} from "./api";
 import {useTaskStore} from "./task";
+import {useSettingsStore} from "./settings";
 
 const storage = localForage.createInstance({
     storeName: "corrector-summary",
@@ -158,9 +159,18 @@ export const useSummaryStore = defineStore('summary',{
                 return;
             }
 
+            // limit the points
+            const settingsStore = useSettingsStore();
+            if (this.currentPoints < 0) {
+                this.currentPoints = 0;
+            }
+            if (this.currentPoints > settingsStore.max_points) {
+                this.currentPoints = settingsStore.max_points;
+            }
+
             try {
                 const currentContent = this.currentContent + '';   // ensure it is not changed because content in state  is bound to tiny
-                const currentPoints= this.currentPoints + 0;
+                const currentPoints = this.currentPoints + 0;
                 const currentGradeKey = this.currentGradeKey + '';
                 const currentIsAuthorized = this.currentIsAuthorized;
 
