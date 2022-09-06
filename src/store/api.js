@@ -133,6 +133,8 @@ export const useApiStore = defineStore('api', {
                 this.itemKey = Cookies.get('LongEssayItem');
                 newItem = true;
             }
+            // always load the item to force a reload of other correctors data
+            newItem = true;
 
             // these values can be changed without forcing a reload
             if (!!Cookies.get('LongEssayBackend') && Cookies.get('LongEssayBackend') !== this.backendUrl) {
@@ -180,7 +182,13 @@ export const useApiStore = defineStore('api', {
                 else {
                     console.log('init: new item, no open saving');
                     if (await this.loadDataFromStorage()) {
-                        this.initialized = await this.loadItemFromBackend(this.itemKey);
+                        if (await this.loadItemFromBackend(this.itemKey)) {
+                            this.initialized = true;
+                        }
+                        else if (await this.loadDataFromBackend()) {
+                            this.itemKey = '';
+                            this.initialized = await this.loadItemFromBackend(this.itemKey);
+                        }
                     }
                     this.updateConfig();
                 }
