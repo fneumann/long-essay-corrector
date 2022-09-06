@@ -3,6 +3,7 @@ import localForage from "localforage";
 import {useApiStore} from "./api";
 import {useTaskStore} from "./task";
 import {useSettingsStore} from "./settings";
+import {useLevelsStore} from "./levels";
 
 const storage = localForage.createInstance({
     storeName: "corrector-summary",
@@ -166,6 +167,14 @@ export const useSummaryStore = defineStore('summary',{
             }
             if (this.currentPoints > settingsStore.max_points) {
                 this.currentPoints = settingsStore.max_points;
+            }
+
+            if (this.currentPoints != this.storedPoints) {
+                const levelsStore = useLevelsStore();
+                let level = levelsStore.getLevelForPoints(this.currentPoints);
+                if (level !== null) {
+                    this.currentGradeKey = level.key
+                }
             }
 
             try {

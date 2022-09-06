@@ -24,7 +24,22 @@ export const useLevelsStore = defineStore('levels',{
 
         getLevel(state) {
             return (key) => state.levels.find(element => element.key == key)
-        }
+        },
+
+        getLevelForPoints(state) {
+            return function (points) {
+                let level = null;
+                let last_points = 0;
+                for (let i = 1; i < state.levels.length; i++) {
+                    if (state.levels[i].min_points <= points
+                    && state.levels[i].min_points >= last_points) {
+                        level = state.levels[i];
+                        last_points = level.points;
+                    }
+                }
+                return level;
+            }
+        },
     },
 
     actions: {
