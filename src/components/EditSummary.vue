@@ -15,9 +15,12 @@ import 'tinymce/plugins/charmap';
 /* Import tiny vue integration */
 import Editor from '@tinymce/tinymce-vue'
 
+import {useTaskStore} from '@/store/task';
 import {useSummaryStore} from '@/store/summary';
 import {useLevelsStore} from '@/store/levels';
 import {useSettingsStore} from '@/store/settings';
+
+const taskStore = useTaskStore();
 const summaryStore = useSummaryStore();
 const levelsStore = useLevelsStore();
 const settingsStore = useSettingsStore();
@@ -77,7 +80,7 @@ const id = "summary";
       <option v-for="level in levelsStore.levels" :key="level.key" :value="level.key">{{level.title}}</option>
     </select>
 
-    <v-btn v-show="!summaryStore.storedIsAuthorized" @click="summaryStore.showAuthorization=true">
+    <v-btn v-show="!summaryStore.storedIsAuthorized" :disabled="!taskStore.authorization_allowed" @click="summaryStore.showAuthorization=true">
       <span>Autorisieren...</span>
     </v-btn>
 

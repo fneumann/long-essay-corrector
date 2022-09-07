@@ -17,12 +17,14 @@ export const useTaskStore = defineStore('task',{
     state: () => {
         return {
             // saved in storage
-            title: null,            // title of the task - shown in the app bar
-            instructions: null,     // instructions - shown in the left column
-            correction_end: null,   // correction end (sec in server time) - accept no writing step after this time
+            title: null,                    // title of the task - shown in the app bar
+            instructions: null,             // instructions - shown in the left column
+            correction_end: null,           // correction end (sec in server time) - accept no writing step after this time
+            correction_allowed: false,      // allowed to enter a correction
+            authorization_allowed: false,   // allowed to authorize the correction
 
             // not saved in storage
-            remaining_time: null     // remaining writing time in seconds (updated per interval)
+            remaining_time: null     // remaining correction time in seconds (updated per interval)
         }
     },
 
@@ -36,6 +38,8 @@ export const useTaskStore = defineStore('task',{
             this.title = data.title;
             this.instructions = data.instructions;
             this.correction_end = data.correction_end;
+            this.correction_allowed = !!data.correction_allowed;
+            this.authorization_allowed = !!data.authorization_allowed;
         },
 
         async clearStorage() {
@@ -72,12 +76,12 @@ export const useTaskStore = defineStore('task',{
         },
 
         /**
-         * Update the remaining writing time (called by interval)
+         * Update the remaining correction time (called by interval)
          */
         updateRemainingTime() {
             const apiStore = useApiStore();
 
-            if (this.writing_end) {
+            if (this.correction_end) {
                 this.remaining_time = Math.max(0, this.correction_end - apiStore.serverTime(Date.now()));
             }
             else {

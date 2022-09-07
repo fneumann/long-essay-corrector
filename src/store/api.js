@@ -32,6 +32,7 @@ export const useApiStore = defineStore('api', {
 
             // not saved
             initialized: false,                 // used to switch from startup screen to the editing view
+            review: false,                      // used to switch to the review
             showInitFailure: false,             // show a message that the initialisation failed
             showItemLoadFailure: false,         // show a message that the loading if an item failed
             showDataReplaceConfirmation: false, // show a confirmation that the stored data should be replaced by another task or user
@@ -181,11 +182,11 @@ export const useApiStore = defineStore('api', {
                 }
                 else {
                     console.log('init: new item, no open saving');
-                    if (await this.loadDataFromStorage()) {
+                    if (await this.loadDataFromBackend()) {
                         if (await this.loadItemFromBackend(this.itemKey)) {
                             this.initialized = true;
                         }
-                        else if (await this.loadDataFromBackend()) {
+                        else {
                             this.itemKey = '';
                             this.initialized = await this.loadItemFromBackend(this.itemKey);
                         }
@@ -206,11 +207,11 @@ export const useApiStore = defineStore('api', {
                 }
                 else {
                     console.log('init: same context and item, no open saving');
-                    if (await this.loadDataFromStorage()) {
+                    if (await this.loadDataFromBackend()) {
                         if (await this.loadItemFromBackend(this.itemKey)) {
                             this.initialized = true;
                         }
-                        else if (await this.loadDataFromBackend()) {
+                        else {
                             this.itemKey = '';
                             this.initialized = await this.loadItemFromBackend(this.itemKey);
                         }
@@ -293,10 +294,12 @@ export const useApiStore = defineStore('api', {
         async loadItemFromStorage() {
             console.log("loadItemFromStorage...");
 
+            const taskStore = useTaskStore();
             const essayStore = useEssayStore();
             const correctorsStore = useCorrectorsStore();
             const summaryStore = useSummaryStore();
 
+            await taskStore.loadFromStorage();
             await essayStore.loadFromStorage();
             await correctorsStore.loadFromStorage();
             await summaryStore.loadFromStorage();
@@ -365,10 +368,12 @@ export const useApiStore = defineStore('api', {
                 return false;
             }
 
+            const taskStore = useTaskStore();
             const essayStore = useEssayStore();
             const correctorsStore = useCorrectorsStore();
             const summaryStore = useSummaryStore();
 
+            await taskStore.loadFromData(response.data.task);
             await essayStore.loadFromData(response.data.essay);
             await correctorsStore.loadFromData(response.data.correctors);
             await summaryStore.loadFromData(response.data.summary);
