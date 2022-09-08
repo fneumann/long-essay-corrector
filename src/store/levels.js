@@ -30,7 +30,7 @@ export const useLevelsStore = defineStore('levels',{
             return function (points) {
                 let level = null;
                 let last_points = 0;
-                for (let i = 1; i < state.levels.length; i++) {
+                for (let i = 0; i < state.levels.length; i++) {
                     if (state.levels[i].min_points <= points
                     && state.levels[i].min_points >= last_points) {
                         level = state.levels[i];
