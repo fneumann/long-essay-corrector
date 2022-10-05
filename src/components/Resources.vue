@@ -15,7 +15,7 @@
        <object
            v-if="resource.mimetype =='application/pdf'"
            type="application/pdf"
-           :data="resource.url"
+           :data="resource.objectUrl"
             width="100%"
             height="100%">
        </object>

@@ -1,6 +1,7 @@
 import { defineStore } from 'pinia';
 import localForage from "localforage";
 import {useApiStore} from "./api";
+import axios from 'axios'
 
 const storage = localForage.createInstance({
     storeName: "corrector-resources",
@@ -66,7 +67,9 @@ export const useResourcesStore = defineStore('resources',{
                     index++;
                 }
 
-            } catch (err) {
+                await this.loadFiles();
+            }
+            catch (err) {
                 console.log(err);
             }
         },
@@ -92,6 +95,8 @@ export const useResourcesStore = defineStore('resources',{
 
                 await storage.setItem('resourceKeys', JSON.stringify(this.keys));
                 await storage.setItem('activeKey', this.activeKey);
+
+                await this.loadFiles();
             }
             catch (err) {
                 console.log(err);
@@ -101,6 +106,35 @@ export const useResourcesStore = defineStore('resources',{
         async selectResource(resource) {
             this.activeKey = resource.key;
             await storage.setItem('activeKey', this.activeKey);
+        },
+
+        /**
+         * Preload file resources (workaround until service worker is implemented)
+         * The Resources Component will only show PDF resources when they are immediately available
+         * This preload forces the resources being in the browser cache
+         *
+         * https://stackoverflow.com/a/50387899
+         */
+        async loadFiles() {
+            let index = 0;
+            while (index < this.keys.length) {
+                let resource = this.getResource(this.keys[index]);
+                let response = null;
+                if (resource.type == 'file') {
+                    try {
+                        console.log('preload ' + resource.title + '...');
+                        response = await axios( resource.url, {responseType: 'blob', timeout: 60000});
+                        resource.objectUrl = URL.createObjectURL(response.data)
+                        console.log('finished. ');
+                    }
+                    catch (error) {
+                        console.error(error);
+                        return false;
+                    }
+                }
+                index++;
+            }
         }
+
     }
 });
