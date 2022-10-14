@@ -78,23 +78,12 @@ function getCorrectorIcon(corrector) {
 
       </v-list-group>
 
-      <v-list-group v-show="correctorsStore.hasCorrectors">
-        <template v-slot:activator="{ props }">
-          <v-list-item active-class="appNavActive" v-bind="props"
-                       @mouseenter="openNavigation()"
-                       :prepend-icon="layoutStore.isCorrectorsVisible ? 'mdi-account-supervisor' : 'mdi-account-supervisor-outline'"
-                       title="Andere Korrektoren">
-          </v-list-item>
-        </template>
-
-        <v-list-item v-for="corrector in correctorsStore.correctors"
-                     @click="selectCorrector(corrector); closeNavigation();"
-                     :prepend-icon="getCorrectorIcon(corrector)"
-                     :title="corrector.title"
-                     :key="corrector.key">
-        </v-list-item>
-
-      </v-list-group>
+      <v-list-item v-for="corrector in correctorsStore.correctors"
+                   @click="selectCorrector(corrector); closeNavigation();"
+                   :prepend-icon="getCorrectorIcon(corrector)"
+                   :title="corrector.title"
+                   :key="corrector.key">
+      </v-list-item>
 
 
     </v-list>
