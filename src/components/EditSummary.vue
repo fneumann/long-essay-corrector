@@ -50,60 +50,62 @@ const id = "summary";
 </script>
 
 <template>
-  <div v-show="!summaryStore.storedIsAuthorized" class="appSummaryContainer">
-    <editor
-        :id="id"
-        v-model="summaryStore.currentContent"
-        @change="summaryStore.updateContent(true)"
-        @keyup="summaryStore.updateContent(true)"
-        api-key="no-api-key"
-        :init="{
+  <div class="appSummaryWrapper">
+    <div v-show="!summaryStore.storedIsAuthorized" class="appSummaryContainer">
+      <editor
+          :id="id"
+          v-model="summaryStore.currentContent"
+          @change="summaryStore.updateContent(true)"
+          @keyup="summaryStore.updateContent(true)"
+          api-key="no-api-key"
+          :init="{
         height: '100%',
         menubar: false,
         plugins: 'lists charmap',
         toolbar: toolbar(),
         custom_undo_redo_levels: 10,
        }"
-    />
-  </div>
-  <div v-show="summaryStore.storedIsAuthorized" class="appSummaryContainer" v-html="summaryStore.currentContent">
-  </div>
+      />
+    </div>
+    <div v-show="summaryStore.storedIsAuthorized" class="appSummaryContainer" v-html="summaryStore.currentContent">
+    </div>
 
-  <div class="appRatingContainer">
+    <div class="appRatingContainer">
 
-    <label for="appSummaryPoints">Punkte: </label>
-    <input :disabled="summaryStore.storedIsAuthorized" id="appSummaryPoints" class="appRatingControl" type="number" min="0" :max="settingsStore.max_points" v-model="summaryStore.currentPoints" />
+      <label for="appSummaryPoints">Punkte: </label>
+      <input :disabled="summaryStore.storedIsAuthorized" id="appSummaryPoints" class="appRatingControl" type="number" min="0" :max="settingsStore.max_points" v-model="summaryStore.currentPoints" />
 
-    <label for="appSummaryGradeKey">Bewertung: </label>
-    <select :disabled="summaryStore.storedIsAuthorized" id="appSummaryGradeKey" class="appRatingControl" v-model="summaryStore.currentGradeKey">
-      <option disabled value="">Bitte wählen:</option>
-      <option v-for="level in levelsStore.levels" :key="level.key" :value="level.key">{{level.title}}</option>
-    </select>
+      <label for="appSummaryGradeKey">Bewertung: </label>
+      <select :disabled="summaryStore.storedIsAuthorized" id="appSummaryGradeKey" class="appRatingControl" v-model="summaryStore.currentGradeKey">
+        <option disabled value="">Bitte wählen:</option>
+        <option v-for="level in levelsStore.levels" :key="level.key" :value="level.key">{{level.title}}</option>
+      </select>
 
-    <v-btn v-show="!summaryStore.storedIsAuthorized" :disabled="!taskStore.authorization_allowed" @click="summaryStore.showAuthorization=true">
-      <span>Autorisieren...</span>
-    </v-btn>
+      <v-btn v-show="!summaryStore.storedIsAuthorized" :disabled="!taskStore.authorization_allowed" @click="summaryStore.showAuthorization=true">
+        <span>Autorisieren...</span>
+      </v-btn>
 
-    <span v-show="summaryStore.storedIsAuthorized">(autorisiert)</span>
+      <span v-show="summaryStore.storedIsAuthorized">(autorisiert)</span>
 
-    <v-dialog persistent v-model="summaryStore.showAuthorization">
-      <v-card>
-        <v-card-text>
-          <p>Durch die Autorisierung wird Ihre Korrektur festgeschrieben. Sie können sie anschließend nicht mehr ändern. Möchten Sie Ihre Korrektur autorisieren?</p>
-        </v-card-text>
-        <v-card-actions>
-          <v-btn @click="setAuthorized()">
-            <v-icon left icon="mdi-check"></v-icon>
-            <span>Autorisieren</span>
-          </v-btn>
-          <v-btn @click="summaryStore.showAuthorization=false">
-            <v-icon left icon="mdi-close"></v-icon>
-            <span>Abbrechen</span>
-          </v-btn>
-        </v-card-actions>
-      </v-card>
-    </v-dialog>
+      <v-dialog persistent v-model="summaryStore.showAuthorization">
+        <v-card>
+          <v-card-text>
+            <p>Durch die Autorisierung wird Ihre Korrektur festgeschrieben. Sie können sie anschließend nicht mehr ändern. Möchten Sie Ihre Korrektur autorisieren?</p>
+          </v-card-text>
+          <v-card-actions>
+            <v-btn @click="setAuthorized()">
+              <v-icon left icon="mdi-check"></v-icon>
+              <span>Autorisieren</span>
+            </v-btn>
+            <v-btn @click="summaryStore.showAuthorization=false">
+              <v-icon left icon="mdi-close"></v-icon>
+              <span>Abbrechen</span>
+            </v-btn>
+          </v-card-actions>
+        </v-card>
+      </v-dialog>
 
+    </div>
   </div>
 </template>
 
@@ -112,12 +114,17 @@ const id = "summary";
   display: none!important;
 }
 
+.appSummaryWrapper {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
 .appSummaryContainer {
-  height: calc(100% - 50px);
+  flex-grow: 1;
 }
 
 .appRatingContainer {
-  height: 50px;
   padding-top: 10px;
 }
 
