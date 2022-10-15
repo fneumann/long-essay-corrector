@@ -4,17 +4,20 @@
  */
 import Items from "@/components/Items.vue";
 import {useApiStore} from '@/store/api';
+import {useTaskStore} from '@/store/task';
 const apiStore = useApiStore();
+const taskStore = useTaskStore();
 </script>
 
 <template>
   <v-app-bar elevation="1" color="white" density="compact" >
-    <v-app-bar-title><items /></v-app-bar-title>
+    <v-app-bar-title>{{ taskStore.title}}</v-app-bar-title>
     <v-spacer></v-spacer>
 
+    <items />
     <v-btn :href="apiStore.returnUrl">
       <v-icon left icon="mdi-logout-variant"></v-icon>
-      <span>Beenden</span>
+      <span>Meine Korrekturen</span>
     </v-btn>
   </v-app-bar>
 

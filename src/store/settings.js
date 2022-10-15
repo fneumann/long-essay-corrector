@@ -17,6 +17,7 @@ export const useSettingsStore = defineStore('settings',{
             mutual_visibility: false,       // corrector sees othercorrectors
             multi_color_highlight: false,   // text can be highlightes in multi colors
             max_points: 0,                  // maximum points that can be given
+            max_auto_distance: 0            // maximum distance between points to allow an automated points calculation
         }
     },
 
@@ -25,6 +26,7 @@ export const useSettingsStore = defineStore('settings',{
             this.mutual_visibility = data.mutual_visibility;
             this.multi_color_highlight = data.multi_color_highlight;
             this.max_points = data.max_points;
+            this.max_auto_distance = data.max_auto_distance;
         },
 
         async clearStorage() {

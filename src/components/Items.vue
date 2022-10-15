@@ -1,11 +1,10 @@
 <script setup>
   import {useApiStore} from '@/store/api';
   import {useItemsStore} from '@/store/items';
-  import {useTaskStore} from '@/store/task';
 
   const apiStore = useApiStore();
   const itemsStore = useItemsStore();
-  const taskStore = useTaskStore();
+
 
   function previousItem(key) {
     let newKey = itemsStore.previousKey(key);
@@ -22,8 +21,6 @@
  <div class="items">
    <template v-for="item in itemsStore.items" :key="item.key">
      <div v-if="item.key == apiStore.itemKey">
-
-       <span>{{ taskStore.title}} </span>
 
        <v-btn :disabled="item.key == itemsStore.firstKey" @click="previousItem(item.key)">
          <v-icon left icon="mdi-arrow-left-bold"></v-icon>

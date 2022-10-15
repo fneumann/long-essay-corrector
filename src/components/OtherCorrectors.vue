@@ -9,7 +9,7 @@ const settingsStore = useSettingsStore();
 </script>
 
 <template>
-  <div class="correctors">
+  <div class="appCorrectorWrapper">
     <template v-for="corrector in correctorsStore.correctors" :key="corrector.key">
       <div class="appCorrector" v-show="correctorsStore.isActive(corrector)" v-html="corrector.text">
       </div>
@@ -32,19 +32,23 @@ const settingsStore = useSettingsStore();
 
 <style scoped>
 
-div {
-  height:100%;
+
+
+.appCorrectorWrapper {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
 }
 
+
 .appCorrector {
-  height: calc(100% - 50px);
+  flex-grow: 1;
   padding: 20px;
   border: 1px solid #cccccc;
   overflow-y: scroll;
 }
 
 .appRatingContainer {
-  height: 50px;
   padding-top: 10px;
 }
 

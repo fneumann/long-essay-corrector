@@ -4,6 +4,7 @@ import {useApiStore} from "./api";
 import {useTaskStore} from "./task";
 import {useSettingsStore} from "./settings";
 import {useLevelsStore} from "./levels";
+import {useCorrectorsStore} from "./correctors";
 
 const storage = localForage.createInstance({
     storeName: "corrector-summary",
@@ -47,7 +48,42 @@ export const useSummaryStore = defineStore('summary',{
     },
 
     getters: {
-        openSending: (state) => state.isSent == false
+        openSending: (state) => state.isSent == false,
+
+        isLastRating() {
+            const correctorsStore = useCorrectorsStore();
+            return correctorsStore.allAuthorized;
+        },
+
+        isAutoPointsPossible(state)  {
+            const correctorsStore = useCorrectorsStore();
+            let points = Array.from(correctorsStore.getAllPoints); // make a copy
+            points.push(state.storedPoints);
+
+            let min_points = null;
+            let max_points = null;
+            let index = 0;
+            while (index < points.length) {
+                if (points[index] !== null) {
+                    if (min_points === null || points[index] < min_points) {
+                        min_points = points[index];
+                    }
+                    if (max_points === null || points[index] > max_points) {
+                        max_points = points[index];
+                    }
+                }
+                index++;
+            }
+            if (min_points !== null && max_points !== null) {
+                const settingsStore = useSettingsStore();
+                if (settingsStore.max_auto_distance !== null) {
+                    if (max_points - min_points <= settingsStore.max_auto_distance) {
+                        return true;
+                    }
+                }
+            }
+            return false;
+        },
     },
 
     actions: {
@@ -134,7 +170,7 @@ export const useSummaryStore = defineStore('summary',{
          * Save it in the browser storage
          * Call sending to the backend (don't wait)
          */
-        async updateContent(fromEditor = false) {
+        async updateContent(fromEditor = false, trySend = true, force = false) {
 
             // don't update if authorized
             if (this.storedIsAuthorized) {
@@ -143,14 +179,14 @@ export const useSummaryStore = defineStore('summary',{
 
             // avoid too many checks
             const currentTime = Date.now();
-            if (currentTime - this.lastCheck < checkInterval) {
+            if ((currentTime - this.lastCheck < checkInterval) && !force) {
                 return;
             }
 
             // avoid parallel updates
             // no need to wait because updateContent is called by interval
             // use post-increment for test-and set
-            if (lockUpdate++) {
+            if (lockUpdate++ && !force) {
                 return;
             }
 
@@ -211,7 +247,9 @@ export const useSummaryStore = defineStore('summary',{
                 this.lastCheck = currentTime;
 
                 // trigger sending to the backend (don't wait)
-                this.sendUpdate();
+                if (trySend) {
+                    this.sendUpdate();
+                }
             }
             catch(error) {
                 console.error(error);
@@ -224,23 +262,23 @@ export const useSummaryStore = defineStore('summary',{
          * Send an update to the backend
          * Called from updateContent() without wait
          */
-        async sendUpdate() {
+        async sendUpdate(force = false) {
 
             // everything is sent - don't send again
-            if (this.isSent) {
+            if (this.isSent && !force) {
                 return;
             }
 
             // avoid too many sendings
             // sendUpdate is called from updateContent with the checkInterval
-            if (Date.now() - this.lastSending < sendInterval) {
+            if ((Date.now() - this.lastSending < sendInterval) && !force) {
                 return;
             }
 
             // avoid parallel sendings
             // no need to wait because sendUpdate is called by interval
             // use post-increment for test-and-set
-            if (lockSending++) {
+            if (lockSending++ && !force) {
                 return;
             }
 
@@ -258,6 +296,17 @@ export const useSummaryStore = defineStore('summary',{
             }
 
             lockSending = 0;
+        },
+
+        /**
+         * Set the summary as authorized and save it
+         */
+        async setAuthorized() {
+            this.currentIsAuthorized = true;
+            this.showAuthorization = false;
+            // force a sending of the authorized state
+            await this.updateContent(false, false, true);
+            await this.sendUpdate(true);
         },
 
         /**

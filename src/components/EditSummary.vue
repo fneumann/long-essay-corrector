@@ -15,15 +15,19 @@ import 'tinymce/plugins/charmap';
 /* Import tiny vue integration */
 import Editor from '@tinymce/tinymce-vue'
 
+import {useApiStore} from '@/store/api';
 import {useTaskStore} from '@/store/task';
 import {useSummaryStore} from '@/store/summary';
 import {useLevelsStore} from '@/store/levels';
 import {useSettingsStore} from '@/store/settings';
+import {useItemsStore} from '@/store/items';
 
+const apiStore = useApiStore();
 const taskStore = useTaskStore();
 const summaryStore = useSummaryStore();
 const levelsStore = useLevelsStore();
 const settingsStore = useSettingsStore();
+const itemsStore = useItemsStore();
 
 function toolbar() {
   switch ('full')
@@ -40,9 +44,17 @@ function toolbar() {
   }
 }
 
-function setAuthorized() {
-  summaryStore.currentIsAuthorized = true;
-  summaryStore.showAuthorization = false;
+async function setAuthorizedAndContinue() {
+  await summaryStore.setAuthorized();
+  let newKey = itemsStore.nextKey(apiStore.itemKey);
+  if (newKey != '') {
+    apiStore.loadItemFromBackend(newKey);
+  }
+}
+
+async function setAuthorizedAndClose() {
+  await summaryStore.setAuthorized();
+  window.location = apiStore.returnUrl;
 }
 
 // Used for retrieving the editor instance using the tinymce.get('ID') method.
@@ -90,12 +102,21 @@ const id = "summary";
       <v-dialog persistent v-model="summaryStore.showAuthorization">
         <v-card>
           <v-card-text>
-            <p>Durch die Autorisierung wird Ihre Korrektur festgeschrieben. Sie können sie anschließend nicht mehr ändern. Möchten Sie Ihre Korrektur autorisieren?</p>
+            <p v-show="summaryStore.isLastRating && !summaryStore.isAutoPointsPossible">
+              <strong>Ihre Punktevergabe wird einen Stichentscheid erfordern!</strong>
+            </p>
+            <p>
+              Durch die Autorisierung wird Ihre Korrektur festgeschrieben. Sie können sie anschließend nicht mehr ändern. Möchten Sie Ihre Korrektur autorisieren?
+            </p>
           </v-card-text>
           <v-card-actions>
-            <v-btn @click="setAuthorized()">
+            <v-btn @click="setAuthorizedAndContinue()">
               <v-icon left icon="mdi-check"></v-icon>
-              <span>Autorisieren</span>
+              <span>Autorisieren und Weiter</span>
+            </v-btn>
+            <v-btn @click="setAuthorizedAndClose()">
+              <v-icon left icon="mdi-check"></v-icon>
+              <span>Autorisieren und Schließen</span>
             </v-btn>
             <v-btn @click="summaryStore.showAuthorization=false">
               <v-icon left icon="mdi-close"></v-icon>

@@ -34,6 +34,29 @@ export const useCorrectorsStore = defineStore('correctors',{
 
         isActive(state) {
             return (corrector) => state.activeKey == corrector.key
+        },
+
+        allAuthorized(state) {
+            let index = 0;
+            while (index < state.correctors.length) {
+                let corrector = state.correctors[index];
+                if (!corrector.is_authorized) {
+                    return false;
+                }
+                index++;
+            }
+            return true;
+        },
+
+        getAllPoints(state) {
+            let points = [];
+            let index = 0;
+            while (index < state.correctors.length) {
+                let corrector = state.correctors[index];
+                points.push(corrector.points);
+                index++;
+            }
+            return points;
         }
     },
 

@@ -11,7 +11,7 @@ const apiStore = useApiStore();
       <v-spacer></v-spacer>
       <v-btn :href="apiStore.returnUrl">
         <v-icon left icon="mdi-logout-variant"></v-icon>
-        <span>Beenden ...</span>
+        <span>Meine Korrekturen</span>
       </v-btn>
     </v-app-bar>
 
