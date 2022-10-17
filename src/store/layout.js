@@ -1,5 +1,7 @@
 import { defineStore } from 'pinia';
 import localForage from "localforage";
+import {useApiStore} from "./api";
+
 const storage = localForage.createInstance({
     storeName: "corrector-layout",
     description: "Layout data",
@@ -21,6 +23,11 @@ export const useLayoutStore = defineStore('layout',{
     },
 
     getters: {
+        isForReviewOrStitch(state) {
+            const apiStore = useApiStore();
+            return apiStore.isReview || apiStore.isStitchDecision;
+        },
+
         isLeftExpanded: (state) => state.expandedColumn == 'left',
         isRightExpanded: (state) => state.expandedColumn == 'right',
 
@@ -29,14 +36,27 @@ export const useLayoutStore = defineStore('layout',{
 
         isInstructionsSelected: (state) => state.leftContent == 'instructions',
         isResourcesSelected: (state) => state.leftContent == 'resources',
-        isCorrectorsSelected: (state) => state.leftContent == 'correctors',
+        isCorrectorsSelected: (state) => {
+            if (state.isForReviewOrStitch) {
+                return  state.rightContent == 'correctors'
+            }
+            else {
+                return  state.leftContent == 'correctors'
+            }
+        },
         isEssaySelected: (state) => state.leftContent == 'essay',
 
         isInstructionsVisible: (state) => (state.expandedColumn != 'right' && state.leftContent == 'instructions'),
         isResourcesVisible: (state) => (state.expandedColumn != 'right' && state.leftContent == 'resources'),
-        isCorrectorsVisible: (state) => (state.expandedColumn != 'right' && state.leftContent == 'correctors'),
+        isCorrectorsVisible: (state) => {
+            if (state.isForReviewOrStitch) {
+                return (state.expandedColumn != 'left' && state.rightContent == 'correctors')
+            }
+            else {
+                return (state.expandedColumn != 'right' && state.leftContent == 'correctors')
+            }
+        },
         isEssayVisible: (state) => (state.expandedColumn != 'right' && state.leftContent == 'essay'),
-
         isSummaryVisible: (state) => (state.expandedColumn != 'left' && state.rightContent == 'summary')
     },
 
@@ -95,8 +115,14 @@ export const useLayoutStore = defineStore('layout',{
         },
 
         showCorrectors() {
-            this.setLeftVisible();
-            this.leftContent = 'correctors';
+            if (this.isForReviewOrStitch) {
+                this.setRightVisible();
+                this.rightContent = 'correctors';
+            }
+            else {
+                this.setLeftVisible();
+                this.leftContent = 'correctors';
+            }
             this.saveToStorage();
         },
 

@@ -20,19 +20,19 @@
           <h2 class="text-h6" v-show="layoutStore.isInstructionsVisible">Aufgabenstellung</h2>
           <h2 class="text-h6" v-show="layoutStore.isEssayVisible">Abgegebener Text</h2>
           <h2 class="text-h6" v-show="layoutStore.isResourcesVisible">{{ resourcesStore.activeTitle }}</h2>
-          <h2 class="text-h6" v-show="layoutStore.isCorrectorsVisible">{{ correctorsStore.activeTitle }}</h2>
+          <h2 class="text-h6" v-if="!layoutStore.isForReviewOrStitch" v-show="layoutStore.isCorrectorsVisible">{{ correctorsStore.activeTitle }}</h2>
         </div>
         <div class="col-content">
           <instructions v-show="layoutStore.isInstructionsVisible" />
           <essay v-show="layoutStore.isEssayVisible" />
           <resources v-show="layoutStore.isResourcesVisible" />
-          <other-correctors v-show="layoutStore.isCorrectorsVisible" />
-
+          <other-correctors v-if="!layoutStore.isForReviewOrStitch" v-show="layoutStore.isCorrectorsVisible" />
         </div>
         <div class="col-footer text-right" :class="{ footerExpanded: layoutStore.isLeftExpanded, footerNormal: !layoutStore.isLeftExpanded}" >
           <v-btn class="ma-2" @click="layoutStore.setLeftExpanded(false)" v-show="layoutStore.isLeftExpanded">
             <v-icon icon="mdi-chevron-left"></v-icon>
-            <span>Meine Korrektur</span>
+            <span v-if="layoutStore.isForReviewOrStitch">{{ correctorsStore.activeTitle }}</span>
+            <span v-if="!layoutStore.isForReviewOrStitch" >Meine Korrektur</span>
           </v-btn>
           <v-btn class="ma-2" @click="layoutStore.setLeftExpanded(true)" v-show="!layoutStore.isLeftExpanded">
             <span>Erweitern</span>
@@ -42,10 +42,12 @@
       </div>
       <div class="column" :class="{ colExpanded: layoutStore.isRightExpanded, colNormal: !layoutStore.isRightExpanded}" v-show="layoutStore.isRightVisible" >
         <div class="col-header">
-          <h2 class="text-h6">Meine Korrektur</h2>
+          <h2 class="text-h6" v-if="layoutStore.isForReviewOrStitch">{{ correctorsStore.activeTitle }}</h2>
+          <h2 class="text-h6" v-if="!layoutStore.isForReviewOrStitch">Meine Korrektur</h2>
         </div>
         <div class="col-content">
-          <edit-summary />
+          <other-correctors v-if="layoutStore.isForReviewOrStitch" />
+          <edit-summary v-if="!layoutStore.isForReviewOrStitch" />
         </div>
         <div class="col-footer text-left" :class="{ footerExpanded: layoutStore.isRightExpanded, footerNormal: !layoutStore.isRightExpanded}">
           <v-btn class="ma-2" @click="layoutStore.setRightExpanded(true)" v-show="!layoutStore.isRightExpanded">
@@ -56,7 +58,7 @@
             <span v-show="layoutStore.isInstructionsSelected">Aufgabenstellung</span>
             <span v-show="layoutStore.isEssaySelected">Abgegebener Text</span>
             <span v-show="layoutStore.isResourcesSelected">{{ resourcesStore.activeTitle }}</span>
-            <span v-show="layoutStore.isCorrectorsSelected">{{ correctorsStore.activeTitle }}</span>
+            <span v-if="!layoutStore.isForReviewOrStitch" v-show="layoutStore.isCorrectorsSelected">{{ correctorsStore.activeTitle }}</span>
             <v-icon icon="mdi-chevron-right"></v-icon>
           </v-btn>
         </div>

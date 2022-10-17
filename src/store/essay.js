@@ -1,5 +1,7 @@
 import { defineStore } from 'pinia';
 import localForage from "localforage";
+import {useApiStore} from "./api";
+import {useLevelsStore} from '@/store/levels';
 
 const storage = localForage.createInstance({
     storeName: "corrector-essay",
@@ -17,7 +19,30 @@ export const useEssayStore = defineStore('essay',{
             text: null,             // processed essay text
             started: null,          // unix timestamp of writing start
             ended: null,            // unix timestamp of writing end
-            authorized: null        // essay is authorized by the writer
+            authorized: null,       // essay is authorized by the writer
+
+            // for stitch decision
+            correction_finalized: null,
+            final_points: null
+        }
+    },
+
+    getters: {
+        grade: (state) => {
+            const levelsStore = useLevelsStore();
+            let level = levelsStore.getLevelForPoints(state.final_points);
+            if (level !== null) {
+                return level.title
+            }
+            return '';
+        },
+        gradeKey: (state) => {
+            const levelsStore = useLevelsStore();
+            let level = levelsStore.getLevelForPoints(state.final_points);
+            if (level !== null) {
+                return level.key
+            }
+            return '';
         }
     },
 
@@ -27,6 +52,8 @@ export const useEssayStore = defineStore('essay',{
             this.started = data.started;
             this.ended = data.ended;
             this.authorized = data.authorized;
+            this.correction_finalized = data.correction_finalized;
+            this.final_points = data.final_points;
         },
 
         async clearStorage() {
@@ -55,6 +82,24 @@ export const useEssayStore = defineStore('essay',{
             } catch (err) {
                 console.log(err);
             }
-        }
+        },
+
+
+        async saveStitchDecision() {
+
+            const apiStore = useApiStore();
+            const correction_finalized = apiStore.serverTime(Date.now());
+            const data = {
+                'final_points': this.final_points,
+                'grade_key': this.gradeKey,
+                'correction_finalized' : correction_finalized,
+            }
+
+            if (await apiStore.saveStitchDecisionToBackend(data)) {
+                this.correction_finalized = correction_finalized;
+                await storage.setItem('final_points', this.final_points);
+                await storage.setItem('correction_finalized', this.correction_finalized);
+            }
+        },
     }
 });

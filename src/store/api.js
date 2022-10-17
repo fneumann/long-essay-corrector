@@ -29,10 +29,11 @@ export const useApiStore = defineStore('api', {
             dataToken: '',                      // authentication token for transmission if data
             fileToken: '',                      // authentication token for loading files
             timeOffset: 0,                      // differnce between server time and client time (ms)
+            isReview: false,                    // corrector is opened for review
+            isStitchDecision: false,            // corrector is opened for stitch decision
 
             // not saved
             initialized: false,                 // used to switch from startup screen to the editing view
-            review: false,                      // used to switch to the review
             showInitFailure: false,             // show a message that the initialisation failed
             showItemLoadFailure: false,         // show a message that the loading if an item failed
             showDataReplaceConfirmation: false, // show a confirmation that the stored data should be replaced by another task or user
@@ -62,6 +63,8 @@ export const useApiStore = defineStore('api', {
                 // use signature instead of token because it is visible
                 params.append('LongEssayUser', state.userKey);
                 params.append('LongEssayEnvironment', state.environmentKey);
+                params.append('LongEssayIsReview', state.isReview ? '1' : '0');
+                params.append('LongEssayIsStitchDecision', state.isStitchDecision ? '1' : '0');
                 params.append('LongEssaySignature', md5( state.userKey + state.environmentKey + token));
 
                 return {
@@ -116,6 +119,8 @@ export const useApiStore = defineStore('api', {
             this.dataToken = localStorage.getItem('correctorDataToken');
             this.fileToken = localStorage.getItem('correctorFileToken');
             this.timeOffset = Math.floor(localStorage.getItem('correctorTimeOffset') ?? 0);
+            this.isReview = localStorage.getItem('correctorIsReview');
+            this.isStitchDecision = localStorage.getItem('correctorIsStitchDecision');
 
             // check if context given by cookies differs and force a reload if neccessary
             if (!!Cookies.get('LongEssayUser') && Cookies.get('LongEssayUser') !== this.userKey) {
@@ -130,6 +135,20 @@ export const useApiStore = defineStore('api', {
                 this.itemKey = '';
                 newContext = true;
             }
+            if (!!Cookies.get('LongEssayIsReview') && (Cookies.get('LongEssayIsReview') == '1') !== this.isReview) {
+                this.isReview = (Cookies.get('LongEssayIsReview') == '1');
+                // review mode may change the available items
+                this.itemKey = '';
+                newContext = true;
+            }
+            if (!!Cookies.get('LongEssayIsStitchDecision') && (Cookies.get('LongEssayIsStitchDecision') == '1') !== this.isStitchDecision) {
+                this.isStitchDecision = (Cookies.get('LongEssayIsStitchDecision') == '1');
+                // stitch decision mode may change the available items
+                this.itemKey = '';
+                newContext = true;
+            }
+
+
             if (!!Cookies.get('LongEssayItem') && Cookies.get('LongEssayItem') !== this.itemKey) {
                 this.itemKey = Cookies.get('LongEssayItem');
                 newItem = true;
@@ -167,7 +186,7 @@ export const useApiStore = defineStore('api', {
                 else {
                     console.log('init: new context, no open saving');
                     if (await this.loadDataFromBackend()) {
-                        this.initialized =  await this.loadItemFromBackend(this.itemKey);
+                        this.initialized = await this.loadItemFromBackend(this.itemKey);
                     }
                     this.updateConfig();
                 }
@@ -254,6 +273,8 @@ export const useApiStore = defineStore('api', {
             Cookies.remove('LongEssayEnvironment');
             Cookies.remove('LongEssayItem');
             Cookies.remove('LongEssayToken');
+            Cookies.remove('LongEssayIsReview');
+            Cookies.remove('LongEssayIsStitchDecision');
 
             localStorage.setItem('correctorBackendUrl', this.backendUrl);
             localStorage.setItem('correctorReturnUrl', this.returnUrl);
@@ -262,6 +283,8 @@ export const useApiStore = defineStore('api', {
             localStorage.setItem('correctorItemKey', this.itemKey);
             localStorage.setItem('correctorDataToken', this.dataToken);
             localStorage.setItem('correctorFileToken', this.fileToken);
+            localStorage.setItem('correctorIsReview', this.isReview);
+            localStorage.setItem('correctorIsStitchDecision', this.isStitchDecision);
         },
 
 
@@ -390,6 +413,23 @@ export const useApiStore = defineStore('api', {
             let response = {};
             try {
                 response = await axios.put( '/summary/' + this.itemKey, data, this.requestConfig(this.dataToken));
+                this.setTimeOffset(response);
+                this.refreshToken(response);
+                return true;
+            }
+            catch (error) {
+                console.error(error);
+                return false;
+            }
+        },
+
+        /**
+         * Save the correction summars to the backend
+         */
+        async saveStitchDecisionToBackend(data) {
+            let response = {};
+            try {
+                response = await axios.put( '/stitch/' + this.itemKey, data, this.requestConfig(this.dataToken));
                 this.setTimeOffset(response);
                 this.refreshToken(response);
                 return true;

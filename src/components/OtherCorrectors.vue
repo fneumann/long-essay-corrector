@@ -13,7 +13,7 @@ const settingsStore = useSettingsStore();
     <template v-for="corrector in correctorsStore.correctors" :key="corrector.key">
       <div class="appCorrector" v-show="correctorsStore.isActive(corrector)" v-html="corrector.text">
       </div>
-      <div class="appRatingContainer">
+      <div class="appRatingContainer" v-show="correctorsStore.isActive(corrector)">
 
         <label for="appSummaryPoints">Punkte: </label>
         <input disabled id="appSummaryPoints" class="appRatingControl" type="number" min="0" :max="settingsStore.max_points" v-model="corrector.points" />

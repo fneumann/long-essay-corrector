@@ -57,6 +57,32 @@ export const useCorrectorsStore = defineStore('correctors',{
                 index++;
             }
             return points;
+        },
+
+       minPoints(state) {
+            let points = null;
+            let index = 0;
+            while (index < state.correctors.length) {
+                let corrector = state.correctors[index];
+                if (points === null || corrector.points < points) {
+                    points = corrector.points;
+                }
+                index++;
+            }
+            return points;
+        },
+
+        maxPoints(state) {
+            let points = null;
+            let index = 0;
+            while (index < state.correctors.length) {
+                let corrector = state.correctors[index];
+                if (points === null || corrector.points > points) {
+                    points = corrector.points;
+                }
+                index++;
+            }
+            return points;
         }
     },
 
