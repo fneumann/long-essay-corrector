@@ -50,15 +50,18 @@
            <label for="appFinalPoints">Finale Punkte: </label>
            <input id="appFinalPoints" class="appRatingControl" type="number" :min="correctorsStore.minPoints" :max="correctorsStore.maxPoints" v-model="essayStore.final_points" />
            <span v-html="essayStore.grade"></span>
+           <br />
+           <label for="appStitchComment">Begründung: </label>
+           <textarea id="appStitchComment" class="appStitchReasonControl" style="width:100%;" v-model="essayStore.stitch_comment"></textarea>
          </p>
 
        </v-card-text>
        <v-card-actions>
-         <v-btn @click="saveAndContinue()">
+         <v-btn @click="saveAndContinue()" :disabled="essayStore.final_points === null || essayStore.final_points === '' || !essayStore.stitch_comment">
            <v-icon left icon="mdi-check"></v-icon>
            <span>Festlegen und Weiter</span>
          </v-btn>
-         <v-btn @click="saveAndClose()">
+         <v-btn @click="saveAndClose()" :disabled="essayStore.final_points === null || essayStore.final_points === '' || !essayStore.stitch_comment">
            <v-icon left icon="mdi-check"></v-icon>
            <span>Festlegen und Schließen</span>
          </v-btn>
@@ -80,6 +83,12 @@
 .appRatingControl {
   border: 1px solid lightgray;
   margin-left: 10px;
+  margin-right: 10px;
+  padding: 5px;
+}
+
+.appStitchReasonControl {
+  border: 1px solid lightgray;
   margin-right: 10px;
   padding: 5px;
 }

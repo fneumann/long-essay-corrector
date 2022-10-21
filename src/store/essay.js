@@ -23,7 +23,8 @@ export const useEssayStore = defineStore('essay',{
 
             // for stitch decision
             correction_finalized: null,
-            final_points: null
+            final_points: null,
+            stitch_comment: null
         }
     },
 
@@ -54,6 +55,7 @@ export const useEssayStore = defineStore('essay',{
             this.authorized = data.authorized;
             this.correction_finalized = data.correction_finalized;
             this.final_points = data.final_points;
+            this.stitch_comment = data.stitch_comment;
         },
 
         async clearStorage() {
@@ -91,6 +93,7 @@ export const useEssayStore = defineStore('essay',{
             const correction_finalized = apiStore.serverTime(Date.now());
             const data = {
                 'final_points': this.final_points,
+                'stitch_comment': this.stitch_comment,
                 'grade_key': this.gradeKey,
                 'correction_finalized' : correction_finalized,
             }
@@ -98,6 +101,7 @@ export const useEssayStore = defineStore('essay',{
             if (await apiStore.saveStitchDecisionToBackend(data)) {
                 this.correction_finalized = correction_finalized;
                 await storage.setItem('final_points', this.final_points);
+                await storage.setItem('stitch_comment', this.stitch_comment);
                 await storage.setItem('correction_finalized', this.correction_finalized);
             }
         },
