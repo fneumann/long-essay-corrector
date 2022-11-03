@@ -32,7 +32,7 @@ const settingsStore = useSettingsStore();
 
 <style scoped>
 
-
+@import '@/styles/content.css';
 
 .appCorrectorWrapper {
   height: 100%;

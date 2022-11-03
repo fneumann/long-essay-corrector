@@ -8,6 +8,9 @@
 </template>
 
 <style scoped>
+
+  @import '@/styles/content.css';
+
   #app-instructions {
     height: 100%;
     padding: 20px;
