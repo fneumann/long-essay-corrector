@@ -119,8 +119,8 @@ export const useApiStore = defineStore('api', {
             this.dataToken = localStorage.getItem('correctorDataToken');
             this.fileToken = localStorage.getItem('correctorFileToken');
             this.timeOffset = Math.floor(localStorage.getItem('correctorTimeOffset') ?? 0);
-            this.isReview = localStorage.getItem('correctorIsReview');
-            this.isStitchDecision = localStorage.getItem('correctorIsStitchDecision');
+            this.isReview = !!localStorage.getItem('correctorIsReview'); // boolean is stored as '1' or ''
+            this.isStitchDecision = !!localStorage.getItem('correctorIsStitchDecision');
 
             // check if context given by cookies differs and force a reload if neccessary
             if (!!Cookies.get('LongEssayUser') && Cookies.get('LongEssayUser') !== this.userKey) {
@@ -135,13 +135,13 @@ export const useApiStore = defineStore('api', {
                 this.itemKey = '';
                 newContext = true;
             }
-            if (!!Cookies.get('LongEssayIsReview') && (Cookies.get('LongEssayIsReview') == '1') !== this.isReview) {
+            if ((Cookies.get('LongEssayIsReview') == '1') != this.isReview) {
                 this.isReview = (Cookies.get('LongEssayIsReview') == '1');
                 // review mode may change the available items
                 this.itemKey = '';
                 newContext = true;
             }
-            if (!!Cookies.get('LongEssayIsStitchDecision') && (Cookies.get('LongEssayIsStitchDecision') == '1') !== this.isStitchDecision) {
+            if ((Cookies.get('LongEssayIsStitchDecision') == '1') != this.isStitchDecision) {
                 this.isStitchDecision = (Cookies.get('LongEssayIsStitchDecision') == '1');
                 // stitch decision mode may change the available items
                 this.itemKey = '';
@@ -244,10 +244,10 @@ export const useApiStore = defineStore('api', {
          * init after the replacement of all data is confirmed
          */
         async initAfterReplaceDataConfirmed() {
-            if (this.loadDataFromBackend()) {
+            if (await this.loadDataFromBackend()) {
+                console.log('initAfterReplaceDataConfirmed: loaded data from backend');
                 this.initialized =  await this.loadItemFromBackend(this.itemKey);
             }
-            this.initialized = false;
             this.updateConfig();
         },
 
@@ -256,6 +256,7 @@ export const useApiStore = defineStore('api', {
          */
         async initAfterReplaceItemConfirmed() {
             this.initialized = await this.loadItemFromBackend(this.itemKey);
+            console.log('initAfterReplaceItemConfirmed: loaded item from backend');
             this.updateConfig();
         },
 
@@ -283,8 +284,8 @@ export const useApiStore = defineStore('api', {
             localStorage.setItem('correctorItemKey', this.itemKey);
             localStorage.setItem('correctorDataToken', this.dataToken);
             localStorage.setItem('correctorFileToken', this.fileToken);
-            localStorage.setItem('correctorIsReview', this.isReview);
-            localStorage.setItem('correctorIsStitchDecision', this.isStitchDecision);
+            localStorage.setItem('correctorIsReview', this.isReview ? '1' : '');    // storage of boolean
+            localStorage.setItem('correctorIsStitchDecision', this.isStitchDecision ? '1' : '');
         },
 
 

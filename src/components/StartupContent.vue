@@ -52,7 +52,7 @@ const apiStore = useApiStore();
           <p>Möchten Sie die neue Aufgabe laden?</p>
         </v-card-text>
         <v-card-actions>
-          <v-btn @click="apiStore.initAfterReplaceDataConfirmed()">
+          <v-btn @click="apiStore.initAfterReplaceDataConfirmed">
             <v-icon left icon="mdi-reload"></v-icon>
             <span>Laden</span>
           </v-btn>
@@ -72,7 +72,7 @@ const apiStore = useApiStore();
           <p>Möchten Sie die neue Abgabe laden?</p>
         </v-card-text>
         <v-card-actions>
-          <v-btn @click="apiStore.initAfterReplaceItemConfirmed()">
+          <v-btn @click="apiStore.initAfterReplaceItemConfirmed">
             <v-icon left icon="mdi-reload"></v-icon>
             <span>Laden</span>
           </v-btn>
