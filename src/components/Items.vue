@@ -1,9 +1,13 @@
 <script setup>
   import {useApiStore} from '@/store/api';
   import {useItemsStore} from '@/store/items';
+  import {useSummaryStore} from "@/store/summary";
+  import {useEssayStore} from "@/store/essay";
 
   const apiStore = useApiStore();
   const itemsStore = useItemsStore();
+  const summaryStore = useSummaryStore();
+  const essayStore = useEssayStore();
 
 
   function previousItem(key) {
@@ -27,6 +31,14 @@
        </v-btn>
 
        <span>{{ item.title }}</span>
+       <template v-if="apiStore.isCorrection">
+         <span v-show="summaryStore.isAuthorized"> - autorisiert</span>
+         <span v-show="!summaryStore.isAuthorized"> - offen</span>
+       </template>
+       <template v-if="!apiStore.isCorrection">
+         <span v-show="essayStore.isFinalized"> - finalisiert</span>
+         <span v-show="!essayStore.isFinalized"> - offen</span>
+       </template>
 
        <v-btn :disabled="item.key == itemsStore.lastKey" @click="nextItem(item.key)">
          <v-icon left icon="mdi-arrow-right-bold"></v-icon>

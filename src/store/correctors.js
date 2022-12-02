@@ -125,6 +125,7 @@ export const useCorrectorsStore = defineStore('correctors',{
 
                 this.keys = [];
                 this.correctors = [];
+                this.activeKey = '';
 
                 let index = 0;
                 while (index < data.length) {
@@ -133,6 +134,9 @@ export const useCorrectorsStore = defineStore('correctors',{
                     this.keys.push(corrector.key);
                     await storage.setItem(corrector.key, corrector);
                     index++;
+                }
+                if (this.keys.length > 0) {
+                    this.activeKey = this.keys[0];
                 }
 
                 await storage.setItem('correctorKeys', JSON.stringify(this.keys));

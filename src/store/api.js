@@ -42,6 +42,9 @@ export const useApiStore = defineStore('api', {
     },
 
     getters: {
+
+        isCorrection: (state) => !state.isReview && !state.isStitchDecision,
+
         /**
          * Get the config object for REST requests
          */

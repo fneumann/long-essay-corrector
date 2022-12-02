@@ -15,7 +15,7 @@ const checkInterval = 1000;     // time (ms) to wait for a new update check (e.g
 const sendInterval = 5000;      // time (ms) to wait for sending open savings to the backend
 
 const startState = {
-    
+
     // saved in storage
     storedContent: '',          // full content corresponding to the storage
     storedPoints: 0,
@@ -49,6 +49,8 @@ export const useSummaryStore = defineStore('summary',{
 
     getters: {
         openSending: (state) => state.isSent == false,
+
+        isAuthorized: (state) => state.currentIsAuthorized,
 
         isLastRating() {
             const correctorsStore = useCorrectorsStore();
@@ -135,7 +137,7 @@ export const useSummaryStore = defineStore('summary',{
 
         /**
          * Load the full state from the storage
-         * Called when the page is reloaded 
+         * Called when the page is reloaded
          */
         async loadFromStorage() {
             lockUpdate = 1;

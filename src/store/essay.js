@@ -29,6 +29,9 @@ export const useEssayStore = defineStore('essay',{
     },
 
     getters: {
+
+        isFinalized: (state) => state.correction_finalized,
+
         grade: (state) => {
             const levelsStore = useLevelsStore();
             let level = levelsStore.getLevelForPoints(state.final_points);
