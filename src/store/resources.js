@@ -67,7 +67,7 @@ export const useResourcesStore = defineStore('resources',{
                     index++;
                 }
 
-                await this.loadFiles();
+                this.loadFiles();
             }
             catch (err) {
                 console.log(err);
@@ -96,7 +96,7 @@ export const useResourcesStore = defineStore('resources',{
                 await storage.setItem('resourceKeys', JSON.stringify(this.keys));
                 await storage.setItem('activeKey', this.activeKey);
 
-                await this.loadFiles();
+                this.loadFiles();
             }
             catch (err) {
                 console.log(err);
