@@ -87,10 +87,6 @@ export const useTaskStore = defineStore('task',{
             else {
                 this.remaining_time = null;
             }
-
-            if (this.correctionEndReached) {
-                apiStore.review = true;
-            }
         }
     }
 });
