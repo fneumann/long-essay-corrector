@@ -452,11 +452,13 @@ export const useApiStore = defineStore('api', {
          * when the response data transfer is short (no files)
          */
         setTimeOffset(response) {
-            const serverTimeMs = response.headers['longessaytime'] * 1000;
-            const clientTimeMs = Date.now();
+            if (response.headers['longessaytime']) {
+                const serverTimeMs = response.headers['longessaytime'] * 1000;
+                const clientTimeMs = Date.now();
 
-            this.timeOffset = clientTimeMs - serverTimeMs;
-            localStorage.setItem('correctorTimeOffset', this.timeOffset);
+                this.timeOffset = clientTimeMs - serverTimeMs;
+                localStorage.setItem('writerTimeOffset', this.timeOffset);
+            }
         },
 
         /**
