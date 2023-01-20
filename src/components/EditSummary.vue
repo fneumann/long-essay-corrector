@@ -126,11 +126,15 @@ const id = "summary";
       <label for="appSummaryPoints">Punkte: </label>
       <input :disabled="summaryStore.storedIsAuthorized" id="appSummaryPoints" class="appRatingControl" type="number" min="0" :max="settingsStore.max_points" v-model="summaryStore.currentPoints" />
 
-      <label for="appSummaryGradeKey">Bewertung: </label>
+      <label for="appSummaryGradeKey">( {{ summaryStore.currentGradeTitle }} ) &nbsp;</label>
+
+
+      <!--
       <select :disabled="summaryStore.storedIsAuthorized" id="appSummaryGradeKey" class="appRatingControl" v-model="summaryStore.currentGradeKey">
         <option disabled value="">Bitte wählen:</option>
         <option v-for="level in levelsStore.levels" :key="level.key" :value="level.key">{{level.title}}</option>
       </select>
+      -->
 
       <v-btn v-show="!summaryStore.storedIsAuthorized" :disabled="!taskStore.authorization_allowed" @click="summaryStore.showAuthorization=true">
         <span>Autorisieren...</span>

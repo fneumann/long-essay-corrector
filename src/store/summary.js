@@ -11,21 +11,22 @@ const storage = localForage.createInstance({
     description: "Summary data",
 });
 
-const checkInterval = 1000;     // time (ms) to wait for a new update check (e.g. 0.2s to 1s)
-const sendInterval = 5000;      // time (ms) to wait for sending open savings to the backend
+// set check interval very short to update the grade level according the points
+const checkInterval = 200;      // time (ms) to wait for a new update check (e.g. 0.2s to 1s)
+const sendInterval = 1000;      // time (ms) to wait for sending open savings to the backend
 
 const startState = {
 
     // saved in storage
     storedContent: '',          // full content corresponding to the storage
-    storedPoints: 0,
+    storedPoints: null,
     storedGradeKey: '',
     storedIsAuthorized: false,
     isSent: true,               // stored content is sent to the server
 
     // not saved
     currentContent: '',         // directly mapped to the tiny editor, changes permanently !!!
-    currentPoints: 0,
+    currentPoints: null,
     currentGradeKey: '',
     currentIsAuthorized: false,
     lastCheck: 0,               // timestamp (ms) of the last check if an update needs a saving
@@ -86,6 +87,17 @@ export const useSummaryStore = defineStore('summary',{
             }
             return false;
         },
+
+        currentGradeTitle(state) {
+            if (state.currentGradeKey) {
+                const levelsStore = useLevelsStore();
+                let level = levelsStore.getLevel(state.currentGradeKey);
+                if (level) {
+                    return level.title;
+                }
+            }
+            return 'ohne Notenstufe';
+        }
     },
 
     actions: {
@@ -127,6 +139,10 @@ export const useSummaryStore = defineStore('summary',{
                 await storage.setItem('storedIsAuthorized', this.storedIsAuthorized);
                 await storage.setItem('isSent', this.isSent);
 
+                if (this.currentGradeKey == '') {
+                    this.updateGradeKeyFromPoints()
+                }
+
             } catch (err) {
                 console.log(err);
             }
@@ -155,6 +171,10 @@ export const useSummaryStore = defineStore('summary',{
                 this.currentGradeKey = this.storedGradeKey;
                 this.currentIsAuthorized = this.storedIsAuthorized;
 
+                if (this.currentGradeKey == '') {
+                    this.updateGradeKeyFromPoints()
+                }
+
             } catch (err) {
                 console.log(err);
             }
@@ -163,6 +183,19 @@ export const useSummaryStore = defineStore('summary',{
             setInterval(this.updateContent, checkInterval);
         },
 
+        /**
+         * Update the grade key from the given points
+         */
+        async updateGradeKeyFromPoints() {
+            const levelsStore = useLevelsStore();
+            let level = levelsStore.getLevelForPoints(this.currentPoints);
+            if (level) {
+                this.currentGradeKey = level.key
+            }
+            else {
+                this.currentGradeKey = '';
+            }
+        },
 
         /**
          * Update the stored content
@@ -207,12 +240,9 @@ export const useSummaryStore = defineStore('summary',{
                 this.currentPoints = settingsStore.max_points;
             }
 
+            // set the grade key for the points
             if (this.currentPoints != this.storedPoints) {
-                const levelsStore = useLevelsStore();
-                let level = levelsStore.getLevelForPoints(this.currentPoints);
-                if (level !== null) {
-                    this.currentGradeKey = level.key
-                }
+                this.updateGradeKeyFromPoints()
             }
 
             try {
@@ -294,6 +324,7 @@ export const useSummaryStore = defineStore('summary',{
             const apiStore = useApiStore();
             if (await apiStore.saveSummaryToBackend(data)) {
                 this.isSent = true;
+                this.lastSending = Date.now();
                 await storage.setItem('isSent', this.isSent);
             }
 
