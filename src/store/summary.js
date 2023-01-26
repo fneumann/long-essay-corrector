@@ -124,6 +124,11 @@ export const useSummaryStore = defineStore('summary',{
                 this.currentPoints = data.points ?? 0;
                 this.currentGradeKey = data.grade_key ?? 0;
                 this.currentIsAuthorized = data.is_authorized ?? false;
+
+                if (this.currentGradeKey == '') {
+                    this.updateGradeKeyFromPoints()
+                }
+
                 this.storedContent = this.currentContent;
                 this.storedPoints = this.currentPoints;
                 this.storedGradeKey = this.currentGradeKey;
@@ -138,11 +143,6 @@ export const useSummaryStore = defineStore('summary',{
                 await storage.setItem('storedGradeKey', this.storedGradeKey);
                 await storage.setItem('storedIsAuthorized', this.storedIsAuthorized);
                 await storage.setItem('isSent', this.isSent);
-
-                if (this.currentGradeKey == '') {
-                    this.updateGradeKeyFromPoints()
-                }
-
             } catch (err) {
                 console.log(err);
             }
