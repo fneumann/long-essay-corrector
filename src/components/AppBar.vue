@@ -5,9 +5,27 @@
 import Items from "@/components/Items.vue";
 import StitchDecision from "@/components/StitchDecision.vue";
 import {useApiStore} from '@/store/api';
+import {useSummaryStore} from '@/store/summary';
 import {useTaskStore} from '@/store/task';
+
+
 const apiStore = useApiStore();
+const summaryStore = useSummaryStore();
 const taskStore = useTaskStore();
+
+
+async function returnToBackend() {
+  if (!summaryStore.isSent) {
+    await summaryStore.sendUpdate(true);
+  }
+  if (!summaryStore.isSent) {
+    apiStore.setShowSendFailure(true);
+  }
+  else {
+    window.location = apiStore.returnUrl;
+  }
+}
+
 </script>
 
 <template>
@@ -16,7 +34,7 @@ const taskStore = useTaskStore();
     <v-spacer></v-spacer>
     <stitch-decision v-if="apiStore.isStitchDecision"/>
     <items />
-    <v-btn :href="apiStore.returnUrl">
+    <v-btn @click="returnToBackend()">
       <v-icon left icon="mdi-logout-variant"></v-icon>
       <span>Korrekturen</span>
     </v-btn>

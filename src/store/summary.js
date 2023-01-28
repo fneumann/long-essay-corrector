@@ -13,7 +13,7 @@ const storage = localForage.createInstance({
 
 // set check interval very short to update the grade level according the points
 const checkInterval = 200;      // time (ms) to wait for a new update check (e.g. 0.2s to 1s)
-const sendInterval = 1000;      // time (ms) to wait for sending open savings to the backend
+const sendInterval = 5000;      // time (ms) to wait for sending open savings to the backend
 
 const startState = {
 
@@ -31,7 +31,7 @@ const startState = {
     currentIsAuthorized: false,
     lastCheck: 0,               // timestamp (ms) of the last check if an update needs a saving
     lastSave: 0,                // timestamp (ms) of the last save in the store
-    lastSending: 0,             // timestamp (ms) of the last sending to the backend
+    lastSendingTry: 0,             // timestamp (ms) of the last sending to the backend
 
 }
 
@@ -303,7 +303,7 @@ export const useSummaryStore = defineStore('summary',{
 
             // avoid too many sendings
             // sendUpdate is called from updateContent with the checkInterval
-            if ((Date.now() - this.lastSending < sendInterval) && !force) {
+            if ((Date.now() - this.lastSendingTry < sendInterval) && !force) {
                 return;
             }
 
@@ -324,10 +324,10 @@ export const useSummaryStore = defineStore('summary',{
             const apiStore = useApiStore();
             if (await apiStore.saveSummaryToBackend(data)) {
                 this.isSent = true;
-                this.lastSending = Date.now();
                 await storage.setItem('isSent', this.isSent);
             }
 
+            this.lastSendingTry = Date.now();
             lockSending = 0;
         },
 

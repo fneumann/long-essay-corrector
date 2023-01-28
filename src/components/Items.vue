@@ -9,15 +9,30 @@
   const summaryStore = useSummaryStore();
   const essayStore = useEssayStore();
 
-
-  function previousItem(key) {
-    let newKey = itemsStore.previousKey(key);
-    apiStore.loadItemFromBackend(newKey);
+  async function previousItem(key) {
+    if (!summaryStore.isSent) {
+      await summaryStore.sendUpdate(true);
+    }
+    if (!summaryStore.isSent) {
+      apiStore.setShowSendFailure(true);
+    }
+    else {
+      let newKey = itemsStore.previousKey(key);
+      apiStore.loadItemFromBackend(newKey);
+    }
   }
 
-  function nextItem(key) {
-    let newKey = itemsStore.nextKey(key);
-    apiStore.loadItemFromBackend(newKey);
+  async function nextItem(key) {
+    if (!summaryStore.isSent) {
+      await summaryStore.sendUpdate(true);
+    }
+    if (!summaryStore.isSent) {
+      apiStore.setShowSendFailure(true);
+    }
+    else {
+      let newKey = itemsStore.nextKey(key);
+      apiStore.loadItemFromBackend(newKey);
+    }
   }
 </script>
 

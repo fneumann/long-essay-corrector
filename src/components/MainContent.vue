@@ -4,9 +4,11 @@
   import OtherCorrectors from "@/components/OtherCorrectors.vue";
   import Essay from "@/components/Essay.vue";
   import EditSummary from "@/components/EditSummary.vue";
+  import {useApiStore} from "../store/api";
   import {useLayoutStore} from "../store/layout";
   import {useResourcesStore} from "../store/resources";
   import {useCorrectorsStore} from "../store/correctors";
+  const apiStore = useApiStore();
   const layoutStore = useLayoutStore();
   const resourcesStore = useResourcesStore();
   const correctorsStore = useCorrectorsStore();
@@ -65,6 +67,29 @@
       </div>
     </div>
   </v-main>
+
+
+  <v-dialog persistent v-model="apiStore.showSendFailure">
+    <v-card>
+      <v-card-text>
+        <p>Ihre letzen Änderungen zu dieser Korrektur konnten nicht übertragen werden, sind aber lokal gespeichert.</p>
+        <p>Sie können diese Meldung schließen und warten bis Ihre Änderungen wieder automatisch gespeichert werden (Siehe Seitenfuß).</p>
+        <p>Alternativ können Sie die Korrektur jetzt abbrechen und später wieder aufrufen, um die Änderungen nachträglich zu speichern.</p>
+      </v-card-text>
+      <v-card-actions>
+        <v-btn @click="apiStore.setShowSendFailure(false)">
+          <v-icon left icon="mdi-close"></v-icon>
+          <span>Meldung schließen</span>
+        </v-btn>
+        <v-btn :href="apiStore.returnUrl">
+          <v-icon left icon="mdi-logout-variant"></v-icon>
+          <span>Korrektur abbrechen</span>
+        </v-btn>
+      </v-card-actions>
+    </v-card>
+  </v-dialog>
+
+
 </template>
 
 <style scoped>

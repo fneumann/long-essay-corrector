@@ -11,20 +11,33 @@
   const correctorsStore = useCorrectorsStore();
 
   let dialogOpen = ref(false);
+  let showSendFailure = ref(false);
 
   async function saveAndContinue() {
     dialogOpen.value=false;
+
     await essayStore.saveStitchDecision();
-    let newKey = itemsStore.nextKey(apiStore.itemKey);
-    if (newKey != '') {
-      apiStore.loadItemFromBackend(newKey);
+    if (!essayStore.correction_finalized) {
+      showSendFailure.value= true;
+    }
+    else {
+      let newKey = itemsStore.nextKey(apiStore.itemKey);
+      if (newKey != '') {
+        apiStore.loadItemFromBackend(newKey);
+      }
     }
   }
 
   async function saveAndClose() {
     dialogOpen.value =false;
+
     await essayStore.saveStitchDecision();
-    window.location = apiStore.returnUrl;
+    if (!essayStore.correction_finalized) {
+      showSendFailure.value= true;
+    }
+    else {
+      window.location = apiStore.returnUrl;
+    }
   }
 </script>
 
@@ -72,6 +85,25 @@
        </v-card-actions>
      </v-card>
    </v-dialog>
+
+   <v-dialog persistent v-model="showSendFailure">
+     <v-card>
+       <v-card-text>
+         <p>Ihr Stichentscheid konnte nicht übertragen werden. Bitte versuchen Sie es später noch einmal.</p>
+       </v-card-text>
+       <v-card-actions>
+         <v-btn @click="showSendFailure = false">
+           <v-icon left icon="mdi-close"></v-icon>
+           <span>Meldung schließen</span>
+         </v-btn>
+         <v-btn :href="apiStore.returnUrl">
+           <v-icon left icon="mdi-logout-variant"></v-icon>
+           <span>Korrektur abbrechen</span>
+         </v-btn>
+       </v-card-actions>
+     </v-card>
+   </v-dialog>
+
  </div>
 
 

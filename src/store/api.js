@@ -36,8 +36,10 @@ export const useApiStore = defineStore('api', {
             initialized: false,                 // used to switch from startup screen to the editing view
             showInitFailure: false,             // show a message that the initialisation failed
             showItemLoadFailure: false,         // show a message that the loading if an item failed
+            showSendFailure: false,             // show a message about a sending failure
             showDataReplaceConfirmation: false, // show a confirmation that the stored data should be replaced by another task or user
             showItemReplaceConfirmation: false, // show a confirmation that the stored item should be replaced by another item
+
         }
     },
 
@@ -477,6 +479,13 @@ export const useApiStore = defineStore('api', {
                 this.fileToken = response.headers['longessayfiletoken'];
                 localStorage.setItem('correctorFileToken', this.fileToken);
             }
+        },
+
+        /**
+         * Set the activatin for showing a sending failure
+         */
+        setShowSendFailure(active) {
+          this.showSendFailure = active
         }
     }
 })

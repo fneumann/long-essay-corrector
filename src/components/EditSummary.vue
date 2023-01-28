@@ -79,15 +79,25 @@ function formats() {
 
 async function setAuthorizedAndContinue() {
   await summaryStore.setAuthorized();
-  let newKey = itemsStore.nextKey(apiStore.itemKey);
-  if (newKey != '') {
-    apiStore.loadItemFromBackend(newKey);
+  if (!summaryStore.isSent) {
+    apiStore.setShowSendFailure(true);
+  }
+  else {
+    let newKey = itemsStore.nextKey(apiStore.itemKey);
+    if (newKey != '') {
+      apiStore.loadItemFromBackend(newKey);
+    }
   }
 }
 
 async function setAuthorizedAndClose() {
   await summaryStore.setAuthorized();
-  window.location = apiStore.returnUrl;
+  if (!summaryStore.isSent) {
+    apiStore.setShowSendFailure(true);
+  }
+  else {
+    window.location = apiStore.returnUrl;
+  }
 }
 
 // Used for retrieving the editor instance using the tinymce.get('ID') method.
