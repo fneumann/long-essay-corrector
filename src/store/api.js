@@ -113,13 +113,11 @@ export const useApiStore = defineStore('api', {
         async init () {
 
             let newContext = false;
-            let newItem = false;
 
             // take values formerly stored
             this.backendUrl = localStorage.getItem('correctorBackendUrl');
             this.returnUrl = localStorage.getItem('correctorReturnUrl');
             this.userKey = localStorage.getItem('correctorUserKey');
-            this.itemKey = localStorage.getItem('correctorItemKey');
             this.environmentKey = localStorage.getItem('correctorEnvironmentKey');
             this.dataToken = localStorage.getItem('correctorDataToken');
             this.fileToken = localStorage.getItem('correctorFileToken');
@@ -130,36 +128,25 @@ export const useApiStore = defineStore('api', {
             // check if context given by cookies differs and force a reload if neccessary
             if (!!Cookies.get('LongEssayUser') && Cookies.get('LongEssayUser') !== this.userKey) {
                 this.userKey = Cookies.get('LongEssayUser');
-                // stored item key is not valid for a new context
-                this.itemKey = '';
                 newContext = true;
             }
             if (!!Cookies.get('LongEssayEnvironment') && Cookies.get('LongEssayEnvironment') !== this.environmentKey) {
                 this.environmentKey = Cookies.get('LongEssayEnvironment');
-                // stored item key is not valid for a new context
-                this.itemKey = '';
                 newContext = true;
             }
             if ((Cookies.get('LongEssayIsReview') == '1') != this.isReview) {
                 this.isReview = (Cookies.get('LongEssayIsReview') == '1');
-                // review mode may change the available items
-                this.itemKey = '';
                 newContext = true;
             }
             if ((Cookies.get('LongEssayIsStitchDecision') == '1') != this.isStitchDecision) {
                 this.isStitchDecision = (Cookies.get('LongEssayIsStitchDecision') == '1');
-                // stitch decision mode may change the available items
-                this.itemKey = '';
                 newContext = true;
             }
 
-
-            if (!!Cookies.get('LongEssayItem') && Cookies.get('LongEssayItem') !== this.itemKey) {
+            this.itemKey = '';
+            if (Cookies.get('LongEssayItem')) {
                 this.itemKey = Cookies.get('LongEssayItem');
-                newItem = true;
             }
-            // always load the item to force a reload of other correctors data
-            newItem = true;
 
             // these values can be changed without forcing a reload
             if (!!Cookies.get('LongEssayBackend') && Cookies.get('LongEssayBackend') !== this.backendUrl) {
@@ -172,76 +159,28 @@ export const useApiStore = defineStore('api', {
                 this.dataToken = Cookies.get('LongEssayToken');
             }
 
-            if (!this.backendUrl || !this.returnUrl || !this.userKey || !this.environmentKey || !this.dataToken)
-            {
+            if (!this.backendUrl || !this.returnUrl || !this.userKey || !this.environmentKey || !this.dataToken) {
                 this.showInitFailure = true;
                 return;
             }
 
             const summaryStore = useSummaryStore();
-
-            if (newContext) {
-                // switching to a new task or user always requires a load from the backend
-                // be shure that existing data is not unintentionally replaced
-
-                if (await summaryStore.hasUnsentSavingInStorage()) {
-                    console.log('init: new context, open saving');
+            if (await summaryStore.hasUnsentSavingInStorage()) {
+                if (newContext) {
+                    console.log('init: open saving, new context');
                     this.showDataReplaceConfirmation = true;
                 }
                 else {
-                    console.log('init: new context, no open saving');
-                    if (await this.loadDataFromBackend()) {
-                        this.initialized = await this.loadItemFromBackend(this.itemKey);
-                    }
-                    this.updateConfig();
-                }
-            }
-            else if (newItem) {
-                // switching to a new correction item requires a load of the item related data
-                // be shure that existing data is not unintentionally replaced
-
-                if (await summaryStore.hasUnsentSavingInStorage()) {
-                    console.log('init: new item, with open saving');
+                    console.log('init: open saving, same context');
                     this.showItemReplaceConfirmation = true;
-                }
-                else {
-                    console.log('init: new item, no open saving');
-                    if (await this.loadDataFromBackend()) {
-                        if (await this.loadItemFromBackend(this.itemKey)) {
-                            this.initialized = true;
-                        }
-                        else {
-                            this.itemKey = '';
-                            this.initialized = await this.loadItemFromBackend(this.itemKey);
-                        }
-                    }
-                    this.updateConfig();
                 }
             }
             else {
-                // context and item are the same
-                // check if data is already entered but not sent
-
-                if (await summaryStore.hasUnsentSavingInStorage()) {
-                    console.log('init: same context and item, with open saving');
-                    if (await this.loadDataFromStorage()) {
-                        this.initialized = await this.loadItemFromStorage();
-                    }
-                    this.updateConfig();
+                console.log('init: no open saving');
+                if (await this.loadDataFromBackend()) {
+                    this.initialized = await this.loadItemFromBackend(this.itemKey);
                 }
-                else {
-                    console.log('init: same context and item, no open saving');
-                    if (await this.loadDataFromBackend()) {
-                        if (await this.loadItemFromBackend(this.itemKey)) {
-                            this.initialized = true;
-                        }
-                        else {
-                            this.itemKey = '';
-                            this.initialized = await this.loadItemFromBackend(this.itemKey);
-                        }
-                    }
-                    this.updateConfig();
-                }
+                this.updateConfig();
             }
         },
 
@@ -249,19 +188,24 @@ export const useApiStore = defineStore('api', {
          * init after the replacement of all data is confirmed
          */
         async initAfterReplaceDataConfirmed() {
+            console.log('initAfterReplaceDataConfirmed');
+            this.showDataReplaceConfirmation = false;
+            this.showItemReplaceConfirmation = false;
             if (await this.loadDataFromBackend()) {
-                console.log('initAfterReplaceDataConfirmed: loaded data from backend');
                 this.initialized =  await this.loadItemFromBackend(this.itemKey);
             }
             this.updateConfig();
         },
 
         /**
-         * init after the replacement of the item is confirmed
+         * init after the keeping of all data is confirmed
          */
-        async initAfterReplaceItemConfirmed() {
-            this.initialized = await this.loadItemFromBackend(this.itemKey);
-            console.log('initAfterReplaceItemConfirmed: loaded item from backend');
+        async initAfterKeepDataConfirmed() {
+            console.log('initAfterKeepDataConfirmed');
+            this.showDataReplaceConfirmation = false;
+            this.showItemReplaceConfirmation = false;
+            this.itemKey = localStorage.getItem('correctorItemKey');
+            this.initialized = this.loadDataFromStorage();
             this.updateConfig();
         },
 
@@ -306,6 +250,7 @@ export const useApiStore = defineStore('api', {
             const levelsStore = useLevelsStore();
             const layoutStore = useLayoutStore();
             const itemsStore = useItemsStore();
+            const summaryStore = useSummaryStore();
 
             await settingsStore.loadFromStorage();
             await taskStore.loadFromStorage();
@@ -313,24 +258,6 @@ export const useApiStore = defineStore('api', {
             await levelsStore.loadFromStorage();
             await layoutStore.loadFromStorage();
             await itemsStore.loadFromStorage();
-
-            return true;
-        },
-
-        /**
-         * Load all data from the storage
-         */
-        async loadItemFromStorage() {
-            console.log("loadItemFromStorage...");
-
-            const taskStore = useTaskStore();
-            const essayStore = useEssayStore();
-            const correctorsStore = useCorrectorsStore();
-            const summaryStore = useSummaryStore();
-
-            await taskStore.loadFromStorage();
-            await essayStore.loadFromStorage();
-            await correctorsStore.loadFromStorage();
             await summaryStore.loadFromStorage();
 
             return true;

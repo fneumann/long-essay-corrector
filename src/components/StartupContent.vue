@@ -47,9 +47,9 @@ const apiStore = useApiStore();
     <v-dialog persistent v-model="apiStore.showDataReplaceConfirmation">
       <v-card>
         <v-card-text>
-          <p>In Ihrem Browser sind Eingaben eines anderen Benutzers oder einer anderen Aufgabe vorhanden, die noch nicht übertragen wurden.
-            Durch das Laden werden diese Eingaben gelöscht.</p>
-          <p>Möchten Sie die neue Aufgabe laden?</p>
+          <p>In Ihrem Browser sind Daten eines anderen Benutzers oder einer anderen Aufgabe vorhanden, die noch nicht übertragen wurden.
+            Durch das Laden werden diese Daten gelöscht.</p>
+          <p>Möchten Sie die neuen Daten laden?</p>
         </v-card-text>
         <v-card-actions>
           <v-btn @click="apiStore.initAfterReplaceDataConfirmed">
@@ -67,18 +67,21 @@ const apiStore = useApiStore();
     <v-dialog persistent v-model="apiStore.showItemReplaceConfirmation">
       <v-card>
         <v-card-text>
-          <p>In Ihrem Browser sind Korrekturen für eine andere Abgabe vorhanden, die noch nicht übertragen wurden.
-            Durch das Laden werden diese Korrekturen gelöscht.</p>
-          <p>Möchten Sie die neue Abgabe laden?</p>
+          <p>In Ihrem Browser sind Daten Ihrer vorherigen Bearbeitung vorhanden, die noch nicht übertragen wurden!</p>
+          <p>Sie können mit diesen Daten weiter arbeiten, um sie nachträglich zu übertragen oder sie verwerfen.</p>
         </v-card-text>
         <v-card-actions>
-          <v-btn @click="apiStore.initAfterReplaceItemConfirmed">
+          <v-btn @click="apiStore.initAfterKeepDataConfirmed">
+            <v-icon left icon="mdi-continue"></v-icon>
+            <span>Weiter arbeiten</span>
+          </v-btn>
+          <v-btn @click="apiStore.initAfterReplaceDataConfirmed">
             <v-icon left icon="mdi-reload"></v-icon>
-            <span>Laden</span>
+            <span>Daten verwerfen</span>
           </v-btn>
           <v-btn :href="apiStore.returnUrl">
             <v-icon left icon="mdi-logout-variant"></v-icon>
-            <span>Abbrechen</span>
+            <span>Zurück zu den Korrekturen</span>
           </v-btn>
         </v-card-actions>
       </v-card>

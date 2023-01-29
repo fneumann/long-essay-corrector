@@ -23,6 +23,7 @@ const startState = {
     storedGradeKey: '',
     storedIsAuthorized: false,
     isSent: true,               // stored content is sent to the server
+    lastStored: 0,              // timestamp (ms) of the last storage
 
     // not saved
     currentContent: '',         // directly mapped to the tiny editor, changes permanently !!!
@@ -30,8 +31,7 @@ const startState = {
     currentGradeKey: '',
     currentIsAuthorized: false,
     lastCheck: 0,               // timestamp (ms) of the last check if an update needs a saving
-    lastSave: 0,                // timestamp (ms) of the last save in the store
-    lastSendingTry: 0,             // timestamp (ms) of the last sending to the backend
+    lastSendingTry: 0,          // timestamp (ms) of the last sending to the backend
 
 }
 
@@ -135,6 +135,7 @@ export const useSummaryStore = defineStore('summary',{
                 this.storedIsAuthorized = this.currentIsAuthorized;
 
                 this.isSent = true
+                this.lastStored = Date.now();
                 this.showAuthorization = false
 
                 await storage.clear();
@@ -143,6 +144,8 @@ export const useSummaryStore = defineStore('summary',{
                 await storage.setItem('storedGradeKey', this.storedGradeKey);
                 await storage.setItem('storedIsAuthorized', this.storedIsAuthorized);
                 await storage.setItem('isSent', this.isSent);
+                await storage.setItem('lastStored', this.lastStored);
+
             } catch (err) {
                 console.log(err);
             }
@@ -166,6 +169,7 @@ export const useSummaryStore = defineStore('summary',{
                 this.storedGradeKey =  await storage.getItem('storedGradeKey') ?? '';
                 this.storedIsAuthorized =  await storage.getItem('storedIsAuthorized') ?? '';
                 this.isSent =  await storage.getItem('isSent') ?? true;
+                this.lastStored =  await storage.getItem('lastStored') ?? 0;
                 this.currentContent = this.storedContent;
                 this.currentPoints = this.storedPoints;
                 this.currentGradeKey = this.storedGradeKey;
@@ -261,6 +265,7 @@ export const useSummaryStore = defineStore('summary',{
                     this.storedPoints = currentPoints;
                     this.storedGradeKey = currentGradeKey;
                     this.storedIsAuthorized = currentIsAuthorized;
+                    this.lastStored = Date.now();
 
                     // save in storage
                     await storage.setItem('isSent', this.isSent);
@@ -268,6 +273,7 @@ export const useSummaryStore = defineStore('summary',{
                     await storage.setItem('storedPoints', this.storedPoints);
                     await storage.setItem('storedGradeKey', this.storedGradeKey);
                     await storage.setItem('storedIsAuthorized', this.storedIsAuthorized);
+                    await storage.setItem('lastStored', this.lastStored);
 
                     console.log(
                         "Save Change ",
