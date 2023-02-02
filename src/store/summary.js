@@ -58,16 +58,21 @@ export const useSummaryStore = defineStore('summary',{
             return correctorsStore.allAuthorized;
         },
 
-        isAutoPointsPossible(state)  {
+        getStitchReasonText(state)  {
             const correctorsStore = useCorrectorsStore();
             let points = Array.from(correctorsStore.getAllPoints); // make a copy
             points.push(state.storedPoints);
 
             let min_points = null;
             let max_points = null;
+            let sum_points = 0;
+            let count_points = 0;
             let index = 0;
             while (index < points.length) {
                 if (points[index] !== null) {
+                    sum_points += points[index];
+                    count_points++;
+
                     if (min_points === null || points[index] < min_points) {
                         min_points = points[index];
                     }
@@ -77,15 +82,25 @@ export const useSummaryStore = defineStore('summary',{
                 }
                 index++;
             }
-            if (min_points !== null && max_points !== null) {
-                const settingsStore = useSettingsStore();
-                if (settingsStore.max_auto_distance !== null) {
-                    if (max_points - min_points <= settingsStore.max_auto_distance) {
-                        return true;
-                    }
+
+            if (count_points == 0) {
+                return '';
+            }
+
+            const settingsStore = useSettingsStore();
+            if (settingsStore.stitch_when_distance) {
+                if (max_points - min_points > settingsStore.max_auto_distance) {
+                    return 'Der Punkteunterschied übersteigt ' + settingsStore.max_auto_distance + ' Punkte!';
                 }
             }
-            return false;
+            if (settingsStore.stitch_when_decimals) {
+                let average = sum_points / count_points;
+                if (Math.floor(average) < average) {
+                    return 'Der Punktedurchschnitt ' + average + ' ist keine ganze Zahl!';
+                }
+            }
+
+            return '';
         },
 
         currentGradeTitle(state) {

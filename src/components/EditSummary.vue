@@ -155,9 +155,11 @@ const id = "summary";
       <v-dialog persistent v-model="summaryStore.showAuthorization">
         <v-card>
           <v-card-text>
-            <p v-show="summaryStore.isLastRating && !summaryStore.isAutoPointsPossible">
-              <strong>Ihre Punktevergabe wird einen Stichentscheid erfordern!</strong>
+            <p v-show="summaryStore.isLastRating && summaryStore.getStitchReasonText != '' ">
+              <strong>Ihre Punktevergabe wird einen Stichentscheid erfordern:</strong>
+              <br>{{ summaryStore.getStitchReasonText }}
             </p>
+            <br>
             <p>
               Durch die Autorisierung wird Ihre Korrektur festgeschrieben. Sie können sie anschließend nicht mehr ändern. Möchten Sie Ihre Korrektur autorisieren?
             </p>
