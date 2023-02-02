@@ -72,12 +72,12 @@ const apiStore = useApiStore();
         </v-card-text>
         <v-card-actions>
           <v-btn @click="apiStore.initAfterKeepDataConfirmed">
-            <v-icon left icon="mdi-continue"></v-icon>
-            <span>Weiter arbeiten</span>
+            <v-icon left icon="mdi-pencil-outline"></v-icon>
+            <span>Mit lokalen Daten weiter arbeiten</span>
           </v-btn>
           <v-btn @click="apiStore.initAfterReplaceDataConfirmed">
-            <v-icon left icon="mdi-reload"></v-icon>
-            <span>Daten verwerfen</span>
+            <v-icon left icon="mdi-trash-can-outline"></v-icon>
+            <span>Lokale Daten verwerfen</span>
           </v-btn>
           <v-btn :href="apiStore.returnUrl">
             <v-icon left icon="mdi-logout-variant"></v-icon>
