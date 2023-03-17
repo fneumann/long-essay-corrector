@@ -1,4 +1,4 @@
-# long-essay-corrector
+# long-essay-corrector (Pre-Test Version)
 
 Web app to correct long essays of an exam.
 Used by the [LongEssayService](https://github.com/fneumann/LongEssayService).
