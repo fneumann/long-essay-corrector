@@ -1,7 +1,6 @@
 # long-essay-corrector (Pre-Test Version)
 
-Web app to correct long essays of an exam.
-Used by the [LongEssayService](https://github.com/fneumann/LongEssayService).
+This repository is no longer maintained. Please use the [EDUTIEK](https://github.com/EDUTIEK/long-essay-assessment-corrector) repository instead.
 
 
 ## Project Setup
